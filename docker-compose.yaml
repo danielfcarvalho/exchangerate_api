@@ -1,0 +1,15 @@
+services:
+
+  # Spring Boot API
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports: 
+      - "8080:8080"
+    restart: unless-stopped
+    networks:
+      - backend
+
+networks:
+  backend: 
