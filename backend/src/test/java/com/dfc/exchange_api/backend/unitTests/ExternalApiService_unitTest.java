@@ -2,6 +2,7 @@ package com.dfc.exchange_api.backend.unitTests;
 
 import com.dfc.exchange_api.backend.services.ExternalApiService;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -93,7 +94,37 @@ public class ExternalApiService_unitTest {
     }
 
     @Test
-    void whenGetConversionValues_returnsSuccess(){
+    void whenGetConversionValues_returnsSuccess() throws URISyntaxException {
+        // Set up Expectations
+        URI uri = new URI(BASE_URL + "/convert&from=GBP&to=EUR&amount=65.0");
 
+        String mockResponse = "{\n" +
+                "    \"motd\": {\n" +
+                "        \"msg\": \"If you or your company use this project or like what we doing, please consider backing us so we can continue maintaining and evolving this project.\",\n" +
+                "        \"url\": \"https://exchangerate.host/#/donate\"\n" +
+                "    },\n" +
+                "    \"success\": true,\n" +
+                "    \"query\": {\n" +
+                "        \"from\": \"EUR\",\n" +
+                "        \"to\": \"GBP\",\n" +
+                "        \"amount\": 65\n" +
+                "    },\n" +
+                "    \"info\": {\n" +
+                "        \"rate\": 0.853548\n" +
+                "    },\n" +
+                "    \"historical\": false,\n" +
+                "    \"date\": \"2023-08-17\",\n" +
+                "    \"result\": 55.480632\n" +
+                "}";
+
+
+        when(mockRestTemplate.getForObject(uri, String.class)).thenReturn(mockResponse);
+
+        // Verify the result is as expected
+        JsonPrimitive response = externalApiService.getConversionValues("GBP", "EUR", 65.0);
+        assertThat(response.getAsDouble()).isEqualTo(55.480632);
+
+        // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
+        Mockito.verify(mockRestTemplate, VerificationModeFactory.times(1)).getForObject(Mockito.any(), Mockito.any());
     }
 }

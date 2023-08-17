@@ -2,6 +2,7 @@ package com.dfc.exchange_api.backend.services;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -40,7 +41,7 @@ public class ExternalApiService {
         return obj;
     }
 
-    public JsonObject getConversionValues(String from, String to, Double amount) throws URISyntaxException {
+    public JsonPrimitive getConversionValues(String from, String to, Double amount) throws URISyntaxException {
         // Calling the External API
         URI uri;
         uri = new URI(BASE_URL + "/convert&from=" + from + "&to=" + to + "&amount=" + amount);
@@ -49,7 +50,7 @@ public class ExternalApiService {
         String response = restTemplate.getForObject(uri, String.class);
         LOGGER.info("Full response as String " + response);
 
-        JsonObject obj = JsonParser.parseString(response).getAsJsonObject().getAsJsonObject("result");
+        JsonPrimitive obj = JsonParser.parseString(response).getAsJsonObject().getAsJsonPrimitive("result");
         LOGGER.info("Extracted response as JSON " + obj);
 
         return obj;
