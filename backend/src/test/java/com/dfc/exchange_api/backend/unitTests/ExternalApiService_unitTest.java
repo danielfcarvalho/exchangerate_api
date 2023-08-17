@@ -40,7 +40,7 @@ public class ExternalApiService_unitTest {
     @Test
     void whenGetLatestExchanges_returnsSuccess() throws URISyntaxException {
         // Set up Expectations
-        URI uri = new URI(BASE_URL + "/latest&base=EUR");
+        URI uri = new URI(BASE_URL + "/latest?base=EUR");
 
         String mockResponse = "{\n" +
                 "    \"motd\": {\n" +
@@ -73,7 +73,7 @@ public class ExternalApiService_unitTest {
     @Test
     void whenGetLatestExchanges_withSymbols_returnsSuccess() throws URISyntaxException {
         // Set up Expectations
-        URI uri = new URI(BASE_URL + "/latest&base=EUR&symbols=GBP,USD");
+        URI uri = new URI(BASE_URL + "/latest?base=EUR&symbols=GBP,USD");
 
         String mockResponse = "{\n" +
                 "    \"motd\": {\n" +
@@ -123,7 +123,7 @@ public class ExternalApiService_unitTest {
     @Test
     void whenGetConversionValues_returnsSuccess() throws URISyntaxException {
         // Set up Expectations
-        URI uri = new URI(BASE_URL + "/convert&from=GBP&to=EUR&amount=65.0");
+        URI uri = new URI(BASE_URL + "/convert?from=GBP&to=EUR&amount=65.0");
 
         String mockResponse = "{\n" +
                 "    \"motd\": {\n" +
