@@ -65,6 +65,7 @@ public class ExternalApiService_unitTest {
         // Verify the result is as expected
         JsonObject response = externalApiService.getLatestExchanges("EUR", Optional.empty());
         assertThat(response.has("AED")).isEqualTo(true);
+        assertThat(response.has("motd")).isEqualTo(false);
 
         // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
         Mockito.verify(mockRestTemplate, VerificationModeFactory.times(1)).getForObject(Mockito.any(), Mockito.any());
@@ -97,6 +98,7 @@ public class ExternalApiService_unitTest {
         assertThat(response.has("USD")).isEqualTo(true);
         assertThat(response.has("GBP")).isEqualTo(true);
         assertThat(response.has("AMD")).isEqualTo(false);
+        assertThat(response.has("motd")).isEqualTo(false);
 
         // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
         Mockito.verify(mockRestTemplate, VerificationModeFactory.times(1)).getForObject(Mockito.any(), Mockito.any());
@@ -170,5 +172,52 @@ public class ExternalApiService_unitTest {
 
         // Verify the result is as expected
         assertThatThrownBy(() -> externalApiService.getConversionValues("GBP", "EUR", 65.0)).isInstanceOf(ExternalApiConnectionError.class);
+    }
+
+    @Test
+    void whenGetAvailableCurrencies_returnsSuccess() throws URISyntaxException {
+        // Set up Expectations
+        URI uri = new URI(BASE_URL + "/symbols");
+
+        String mockResponse = "{" +
+                "\"motd\": {" +
+                "\"msg\": \"If you or your company use this project or like what we doing, please consider backing us so we can continue maintaining and evolving this project.\"," +
+                "\"url\": \"https://exchangerate.host/#/donate\"" +
+                "}," +
+                "\"success\": true," +
+                "\"symbols\": {" +
+                "\"AED\": {" +
+                "\"description\": \"United Arab Emirates Dirham\"," +
+                "\"code\": \"AED\"" +
+                "}," +
+                "\"AFN\": {" +
+                "\"description\": \"Afghan Afghani\"," +
+                "\"code\": \"AFN\"" +
+                "}," +
+                "\"ZAR\": {" +
+                "\"description\": \"South African Rand\"," +
+                "\"code\": \"ZAR\"" +
+                "}," +
+                "\"ZMW\": {" +
+                "\"description\": \"Zambian Kwacha\"," +
+                "\"code\": \"ZMW\"" +
+                "}," +
+                "\"ZWL\": {" +
+                "\"description\": \"Zimbabwean Dollar\"," +
+                "\"code\": \"ZWL\"" +
+                "}" +
+                "}" +
+                "}";
+
+        when(mockRestTemplate.getForObject(uri, String.class)).thenReturn(mockResponse);
+
+        // Verify the result is as expected
+        JsonObject response = externalApiService.getAvailableCurrencies();
+        assertThat(response.has("AED")).isEqualTo(true);
+        assertThat(response.has("ZWL")).isEqualTo(true);
+        assertThat(response.has("motd")).isEqualTo(false);
+
+        // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
+        Mockito.verify(mockRestTemplate, VerificationModeFactory.times(1)).getForObject(Mockito.any(), Mockito.any());
     }
 }
