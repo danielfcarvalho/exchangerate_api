@@ -12,6 +12,7 @@ import org.mockito.Mockito;
 import org.mockito.internal.verification.VerificationModeFactory;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
@@ -109,7 +110,10 @@ public class ExternalApiService_unitTest {
         MockRestServiceServer mockServer = MockRestServiceServer.createServer(mockRestTemplate);
 
         mockServer.expect(requestTo(uri))
-                .andRespond(withStatus(HttpStatus.NOT_FOUND));
+                .andRespond(withStatus(HttpStatus.BAD_REQUEST)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{\"error\":\"Bad request\"}"));
+
 
 
         // Verify the result is as expected
@@ -159,7 +163,9 @@ public class ExternalApiService_unitTest {
         MockRestServiceServer mockServer = MockRestServiceServer.createServer(mockRestTemplate);
 
         mockServer.expect(requestTo(uri))
-                .andRespond(withStatus(HttpStatus.NOT_FOUND));
+                .andRespond(withStatus(HttpStatus.BAD_REQUEST)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{\"error\":\"Bad request\"}"));
 
 
         // Verify the result is as expected
