@@ -1,5 +1,6 @@
 package com.dfc.exchange_api.backend.unitTests;
 
+import com.dfc.exchange_api.backend.exceptions.ExternalApiConnectionError;
 import com.dfc.exchange_api.backend.services.ExternalApiService;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -10,6 +11,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.internal.verification.VerificationModeFactory;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
@@ -17,7 +20,10 @@ import java.net.URISyntaxException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 
 @ExtendWith(MockitoExtension.class)
 public class ExternalApiService_unitTest {
@@ -27,6 +33,8 @@ public class ExternalApiService_unitTest {
     ExternalApiService externalApiService;
 
     private final String BASE_URL = "https://api.exchangerate.host";
+
+    // Testing the connection to the exchange endpoint
 
     @Test
     void whenGetLatestExchanges_returnsSuccess() throws URISyntaxException {
@@ -94,6 +102,21 @@ public class ExternalApiService_unitTest {
     }
 
     @Test
+    void whenGetLatestExchanges_returnsBadRequest_thenThrowException() throws URISyntaxException {
+        // Set up Expectations
+        URI uri = new URI(BASE_URL + "/latest&base=EUR");
+
+        MockRestServiceServer mockServer = MockRestServiceServer.createServer(mockRestTemplate);
+
+        mockServer.expect(requestTo(uri))
+                .andRespond(withStatus(HttpStatus.NOT_FOUND));
+
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> externalApiService.getLatestExchanges("EUR", Optional.empty())).isInstanceOf(ExternalApiConnectionError.class);
+    }
+
+    @Test
     void whenGetConversionValues_returnsSuccess() throws URISyntaxException {
         // Set up Expectations
         URI uri = new URI(BASE_URL + "/convert&from=GBP&to=EUR&amount=65.0");
@@ -126,5 +149,20 @@ public class ExternalApiService_unitTest {
 
         // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
         Mockito.verify(mockRestTemplate, VerificationModeFactory.times(1)).getForObject(Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    void whenGetLatestConversion_returnsBadRequest_thenThrowException() throws URISyntaxException {
+        // Set up Expectations
+        URI uri = new URI(BASE_URL + "/convert&from=GBP&to=EUR&amount=65.0");
+
+        MockRestServiceServer mockServer = MockRestServiceServer.createServer(mockRestTemplate);
+
+        mockServer.expect(requestTo(uri))
+                .andRespond(withStatus(HttpStatus.NOT_FOUND));
+
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> externalApiService.getConversionValues("GBP", "EUR", 65.0)).isInstanceOf(ExternalApiConnectionError.class);
     }
 }
