@@ -64,8 +64,8 @@ public class ExternalApiService_unitTest {
 
         // Verify the result is as expected
         JsonObject response = externalApiService.getLatestExchanges("EUR", Optional.empty());
-        assertThat(response.has("AED")).isEqualTo(true);
-        assertThat(response.has("motd")).isEqualTo(false);
+        assertThat(response.has("AED")).isTrue();
+        assertThat(response.has("motd")).isFalse();
 
         // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
         Mockito.verify(mockRestTemplate, VerificationModeFactory.times(1)).getForObject(Mockito.any(), Mockito.any());
@@ -95,10 +95,10 @@ public class ExternalApiService_unitTest {
 
         // Verify the result is as expected
         JsonObject response = externalApiService.getLatestExchanges("EUR", Optional.of("GBP,USD"));
-        assertThat(response.has("USD")).isEqualTo(true);
-        assertThat(response.has("GBP")).isEqualTo(true);
-        assertThat(response.has("AMD")).isEqualTo(false);
-        assertThat(response.has("motd")).isEqualTo(false);
+        assertThat(response.has("USD")).isTrue();
+        assertThat(response.has("GBP")).isTrue();
+        assertThat(response.has("AMD")).isFalse();
+        assertThat(response.has("motd")).isFalse();
 
         // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
         Mockito.verify(mockRestTemplate, VerificationModeFactory.times(1)).getForObject(Mockito.any(), Mockito.any());
@@ -213,9 +213,9 @@ public class ExternalApiService_unitTest {
 
         // Verify the result is as expected
         JsonObject response = externalApiService.getAvailableCurrencies();
-        assertThat(response.has("AED")).isEqualTo(true);
-        assertThat(response.has("ZWL")).isEqualTo(true);
-        assertThat(response.has("motd")).isEqualTo(false);
+        assertThat(response.has("AED")).isTrue();
+        assertThat(response.has("ZWL")).isTrue();
+        assertThat(response.has("motd")).isFalse();
 
         // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
         Mockito.verify(mockRestTemplate, VerificationModeFactory.times(1)).getForObject(Mockito.any(), Mockito.any());

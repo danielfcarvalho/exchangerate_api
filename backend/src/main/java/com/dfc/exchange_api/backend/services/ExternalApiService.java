@@ -1,7 +1,6 @@
 package com.dfc.exchange_api.backend.services;
 
 import com.dfc.exchange_api.backend.exceptions.ExternalApiConnectionError;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
@@ -57,12 +56,12 @@ public class ExternalApiService {
         URI uri = uriBuilder.build().toUri();
 
         try {
-            LOGGER.info("Calling the Exchange Rate API on the following path: " + uri);
+            LOGGER.info("Calling the Exchange Rate API on the following path: {}", uri);
             String response = restTemplate.getForObject(uri, String.class);
-            LOGGER.info("Full response as String " + response);
+            LOGGER.info("Full response as String: {}", response);
 
             JsonObject obj = JsonParser.parseString(response).getAsJsonObject().getAsJsonObject("rates");
-            LOGGER.info("Extracted response as JSON " + obj);
+            LOGGER.info("Extracted response as JSON: {}", obj);
 
             return obj;
         } catch (HttpServerErrorException ex) {
@@ -73,12 +72,8 @@ public class ExternalApiService {
             // Handle 4xx client errors
             LOGGER.error("External API client error: {}", ex.getMessage());
             throw new ExternalApiConnectionError("External API client error");
-        } catch (RestClientException ex) {
+        } catch (RestClientException|NullPointerException ex){
             // Handle other exceptions (e.g., connection errors)
-            LOGGER.error("External API request failed: {}", ex.getMessage());
-            throw new ExternalApiConnectionError("External API request failed");
-        } catch (NullPointerException ex) {
-            // Expected response or field is not present
             LOGGER.error("External API request failed: {}", ex.getMessage());
             throw new ExternalApiConnectionError("External API request failed");
         }
@@ -105,12 +100,12 @@ public class ExternalApiService {
         URI uri = uriBuilder.build().toUri();
 
         try{
-            LOGGER.info("Calling the Exchange Rate API on the following path: " + uri);
+            LOGGER.info("Calling the Exchange Rate API on the following path: {}", uri);
             String response = restTemplate.getForObject(uri, String.class);
-            LOGGER.info("Full response as String " + response);
+            LOGGER.info("Full response as String: {}", response);
 
             JsonPrimitive obj = JsonParser.parseString(response).getAsJsonObject().getAsJsonPrimitive("result");
-            LOGGER.info("Extracted response as JSON " + obj);
+            LOGGER.info("Extracted response as JSON: {}", obj);
 
             return obj;
         } catch (HttpServerErrorException ex) {
@@ -121,12 +116,8 @@ public class ExternalApiService {
             // Handle 4xx client errors
             LOGGER.error("External API client error: {}", ex.getMessage());
             throw new ExternalApiConnectionError("External API client error");
-        } catch (RestClientException ex) {
+        } catch (RestClientException|NullPointerException ex) {
             // Handle other exceptions (e.g., connection errors)
-            LOGGER.error("External API request failed: {}", ex.getMessage());
-            throw new ExternalApiConnectionError("External API request failed");
-        } catch (NullPointerException ex) {
-            // Expected response or field is not present
             LOGGER.error("External API request failed: {}", ex.getMessage());
             throw new ExternalApiConnectionError("External API request failed");
         }
@@ -145,10 +136,10 @@ public class ExternalApiService {
         try{
             LOGGER.info("Calling the Exchange Rate API on the following path: " + uri);
             String response = restTemplate.getForObject(uri, String.class);
-            LOGGER.info("Full response as String " + response);
+            LOGGER.info("Full response as String: {}", response);
 
             JsonObject obj = JsonParser.parseString(response).getAsJsonObject().getAsJsonObject("symbols");
-            LOGGER.info("Extracted response as JSON " + obj);
+            LOGGER.info("Extracted response as JSON: {}", obj);
 
             return obj;
         } catch (HttpServerErrorException ex) {
@@ -159,12 +150,8 @@ public class ExternalApiService {
             // Handle 4xx client errors
             LOGGER.error("External API client error: {}", ex.getMessage());
             throw new ExternalApiConnectionError("External API client error");
-        } catch (RestClientException ex) {
+        } catch (RestClientException|NullPointerException ex) {
             // Handle other exceptions (e.g., connection errors)
-            LOGGER.error("External API request failed: {}", ex.getMessage());
-            throw new ExternalApiConnectionError("External API request failed");
-        } catch (NullPointerException ex) {
-            // Expected response or field is not present
             LOGGER.error("External API request failed: {}", ex.getMessage());
             throw new ExternalApiConnectionError("External API request failed");
         }
