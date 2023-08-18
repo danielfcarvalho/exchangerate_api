@@ -15,9 +15,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,9 +38,12 @@ public class ExternalApiService_unitTest {
     // Testing the connection to the exchange endpoint
 
     @Test
-    void whenGetLatestExchanges_returnsSuccess() throws URISyntaxException {
+    void whenGetLatestExchanges_returnsSuccess() {
         // Set up Expectations
-        URI uri = new URI(BASE_URL + "/latest?base=EUR");
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL).path("/latest")
+                .queryParam("base", "EUR");
+
+        URI uri = uriBuilder.build().toUri();
 
         String mockResponse = "{\n" +
                 "    \"motd\": {\n" +
@@ -63,7 +66,7 @@ public class ExternalApiService_unitTest {
         when(mockRestTemplate.getForObject(uri, String.class)).thenReturn(mockResponse);
 
         // Verify the result is as expected
-        JsonObject response = externalApiService.getLatestExchanges("EUR", Optional.empty());
+        JsonObject response = externalApiService.getLatestExchanges("EUR", Optional.empty()).getAsJsonObject();
         assertThat(response.has("AED")).isTrue();
         assertThat(response.has("motd")).isFalse();
 
@@ -72,9 +75,12 @@ public class ExternalApiService_unitTest {
     }
 
     @Test
-    void whenGetLatestExchanges_withSymbols_returnsSuccess() throws URISyntaxException {
+    void whenGetLatestExchanges_withSymbols_returnsSuccess() {
         // Set up Expectations
-        URI uri = new URI(BASE_URL + "/latest?base=EUR&symbols=GBP,USD");
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL).path("/latest")
+                .queryParam("base", "EUR").queryParam("symbols", "GBP,USD");
+
+        URI uri = uriBuilder.build().toUri();
 
         String mockResponse = "{\n" +
                 "    \"motd\": {\n" +
@@ -94,7 +100,7 @@ public class ExternalApiService_unitTest {
         when(mockRestTemplate.getForObject(uri, String.class)).thenReturn(mockResponse);
 
         // Verify the result is as expected
-        JsonObject response = externalApiService.getLatestExchanges("EUR", Optional.of("GBP,USD"));
+        JsonObject response = externalApiService.getLatestExchanges("EUR", Optional.of("GBP,USD")).getAsJsonObject();
         assertThat(response.has("USD")).isTrue();
         assertThat(response.has("GBP")).isTrue();
         assertThat(response.has("AMD")).isFalse();
@@ -105,9 +111,12 @@ public class ExternalApiService_unitTest {
     }
 
     @Test
-    void whenGetLatestExchanges_returnsBadRequest_thenThrowException() throws URISyntaxException {
+    void whenGetLatestExchanges_returnsBadRequest_thenThrowException() {
         // Set up Expectations
-        URI uri = new URI(BASE_URL + "/latest&base=EUR");
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL).path("/latest")
+                .queryParam("base", "EUR");
+
+        URI uri = uriBuilder.build().toUri();
 
         MockRestServiceServer mockServer = MockRestServiceServer.createServer(mockRestTemplate);
 
@@ -123,9 +132,11 @@ public class ExternalApiService_unitTest {
     }
 
     @Test
-    void whenGetConversionValues_returnsSuccess() throws URISyntaxException {
+    void whenGetConversionValues_returnsSuccess() {
         // Set up Expectations
-        URI uri = new URI(BASE_URL + "/convert?from=GBP&to=EUR&amount=65.0");
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL).path("/convert")
+                .queryParam("from", "GBP").queryParam("to", "EUR").queryParam("amount", "65.0");
+        URI uri = uriBuilder.build().toUri();
 
         String mockResponse = "{\n" +
                 "    \"motd\": {\n" +
@@ -150,7 +161,7 @@ public class ExternalApiService_unitTest {
         when(mockRestTemplate.getForObject(uri, String.class)).thenReturn(mockResponse);
 
         // Verify the result is as expected
-        JsonPrimitive response = externalApiService.getConversionValues("GBP", "EUR", 65.0);
+        JsonPrimitive response = externalApiService.getConversionValues("GBP", "EUR", 65.0).getAsJsonPrimitive();
         assertThat(response.getAsDouble()).isEqualTo(55.480632);
 
         // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
@@ -158,9 +169,11 @@ public class ExternalApiService_unitTest {
     }
 
     @Test
-    void whenGetLatestConversion_returnsBadRequest_thenThrowException() throws URISyntaxException {
+    void whenGetLatestConversion_returnsBadRequest_thenThrowException() {
         // Set up Expectations
-        URI uri = new URI(BASE_URL + "/convert&from=GBP&to=EUR&amount=65.0");
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL).path("/convert")
+                .queryParam("from", "GBP").queryParam("to", "EUR").queryParam("amount", "65.0");
+        URI uri = uriBuilder.build().toUri();
 
         MockRestServiceServer mockServer = MockRestServiceServer.createServer(mockRestTemplate);
 
@@ -175,9 +188,10 @@ public class ExternalApiService_unitTest {
     }
 
     @Test
-    void whenGetAvailableCurrencies_returnsSuccess() throws URISyntaxException {
+    void whenGetAvailableCurrencies_returnsSuccess() {
         // Set up Expectations
-        URI uri = new URI(BASE_URL + "/symbols");
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL).path("/symbols");
+        URI uri = uriBuilder.build().toUri();
 
         String mockResponse = "{" +
                 "\"motd\": {" +
@@ -212,7 +226,7 @@ public class ExternalApiService_unitTest {
         when(mockRestTemplate.getForObject(uri, String.class)).thenReturn(mockResponse);
 
         // Verify the result is as expected
-        JsonObject response = externalApiService.getAvailableCurrencies();
+        JsonObject response = externalApiService.getAvailableCurrencies().getAsJsonObject();
         assertThat(response.has("AED")).isTrue();
         assertThat(response.has("ZWL")).isTrue();
         assertThat(response.has("motd")).isFalse();

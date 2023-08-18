@@ -46,7 +46,7 @@ public class CurrencyDatabaseInitialization implements CommandLineRunner {
 
         // Fetching supported currencies by the external API
         LOGGER.info("Fetching list of supported currencies by the external API....");
-        JsonObject currenciesJSON = externalApiService.getAvailableCurrencies();
+        JsonObject currenciesJSON = externalApiService.getAvailableCurrencies().getAsJsonObject();
 
         for (Map.Entry<String, JsonElement> entry: currenciesJSON.entrySet()){
             JsonObject currentObject = entry.getValue().getAsJsonObject(); // {"description": ..., "code": ....}
