@@ -1,6 +1,7 @@
 package com.dfc.exchange_api.backend.services;
 
 import com.dfc.exchange_api.backend.exceptions.ExternalApiConnectionError;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
@@ -53,7 +54,6 @@ public class ExternalApiService {
                 .queryParam("base", base);
 
         symbols.ifPresent(s -> uriBuilder.queryParam("symbols", s));
-
         URI uri = uriBuilder.build().toUri();
 
         try {
@@ -102,7 +102,6 @@ public class ExternalApiService {
         // Calling the External API
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL).path("/convert")
                 .queryParam("from", from).queryParam("to", to).queryParam("amount", amount);
-
         URI uri = uriBuilder.build().toUri();
 
         try{
@@ -111,6 +110,44 @@ public class ExternalApiService {
             LOGGER.info("Full response as String " + response);
 
             JsonPrimitive obj = JsonParser.parseString(response).getAsJsonObject().getAsJsonPrimitive("result");
+            LOGGER.info("Extracted response as JSON " + obj);
+
+            return obj;
+        } catch (HttpServerErrorException ex) {
+            // Handle 5xx server errors
+            LOGGER.error("External API server error: {}", ex.getMessage());
+            throw new ExternalApiConnectionError("External API server error");
+        } catch (HttpClientErrorException ex) {
+            // Handle 4xx client errors
+            LOGGER.error("External API client error: {}", ex.getMessage());
+            throw new ExternalApiConnectionError("External API client error");
+        } catch (RestClientException ex) {
+            // Handle other exceptions (e.g., connection errors)
+            LOGGER.error("External API request failed: {}", ex.getMessage());
+            throw new ExternalApiConnectionError("External API request failed");
+        } catch (NullPointerException ex) {
+            // Expected response or field is not present
+            LOGGER.error("External API request failed: {}", ex.getMessage());
+            throw new ExternalApiConnectionError("External API request failed");
+        }
+    }
+
+    /**
+     * This method contacts the /symbols endpoint in the external API, retrieving the full list of supported currencies
+     * by said API.
+     * @return JsonArray, in which each element holds the description and code for each currency.
+     */
+    public JsonObject getAvailableCurrencies() {
+        // Calling the External API
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL).path("/symbols");
+        URI uri = uriBuilder.build().toUri();
+
+        try{
+            LOGGER.info("Calling the Exchange Rate API on the following path: " + uri);
+            String response = restTemplate.getForObject(uri, String.class);
+            LOGGER.info("Full response as String " + response);
+
+            JsonObject obj = JsonParser.parseString(response).getAsJsonObject().getAsJsonObject("symbols");
             LOGGER.info("Extracted response as JSON " + obj);
 
             return obj;

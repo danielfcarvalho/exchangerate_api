@@ -1,6 +1,7 @@
 package com.dfc.exchange_api.backend.controllers;
 
 import com.dfc.exchange_api.backend.services.ExternalApiService;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,10 +19,9 @@ public class TestController {
     @Autowired
     ExternalApiService externalApiService;
 
-    @GetMapping("latest/{base}")
-    public ResponseEntity<JsonObject> getLatestsExchange(@PathVariable(name = "base") String base,
-                                                         @RequestParam(name = "symbols", required = false) Optional<String> symbols) throws URISyntaxException {
+    @GetMapping("latest")
+    public ResponseEntity<JsonObject> getLatestsExchange() throws URISyntaxException {
 
-        return ResponseEntity.ok().body(externalApiService.getLatestExchanges(base, symbols));
+        return ResponseEntity.ok().body(externalApiService.getAvailableCurrencies());
     }
 }
