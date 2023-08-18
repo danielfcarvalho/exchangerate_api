@@ -23,9 +23,9 @@ import java.util.concurrent.TimeoutException;
  */
 @Service
 public class ExternalApiService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExternalApiService.class);
     private final RestTemplate restTemplate;
     private final String BASE_URL = "https://api.exchangerate.host";
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExternalApiService.class);
 
     public ExternalApiService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
