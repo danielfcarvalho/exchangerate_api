@@ -1,5 +1,6 @@
 package com.dfc.exchange_api.backend.unitTests;
 
+import com.dfc.exchange_api.backend.exceptions.ExternalApiConnectionError;
 import com.dfc.exchange_api.backend.models.Currency;
 import com.dfc.exchange_api.backend.repositories.CurrencyRepository;
 import com.dfc.exchange_api.backend.services.CurrencyService;
@@ -16,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;

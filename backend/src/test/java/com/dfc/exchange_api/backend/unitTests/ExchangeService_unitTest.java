@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ExchangeService_unitTest {
+class ExchangeService_unitTest {
     @Mock
     private ExternalApiService externalApiService;
 

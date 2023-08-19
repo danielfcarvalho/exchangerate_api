@@ -1,5 +1,6 @@
 package com.dfc.exchange_api.backend.services;
 
+import com.dfc.exchange_api.backend.exceptions.ExternalApiConnectionError;
 import com.dfc.exchange_api.backend.exceptions.InvalidCurrencyException;
 import com.dfc.exchange_api.backend.models.Currency;
 import com.dfc.exchange_api.backend.repositories.CurrencyRepository;
@@ -34,19 +35,21 @@ public class ExchangeService {
      * @throws InvalidCurrencyException - if either of the currency codes passed as parameters by the user is not supported
      * by the API, throws this exception with the HTTP Status BAD REQUEST
      */
-    public Map<String, Double> getExchangeRateForSpecificCurrency(String fromCode, String toCode) throws InvalidCurrencyException{
-        //TODO: Logging
+    public Map<String, Double> getExchangeRateForSpecificCurrency(String fromCode, String toCode) throws InvalidCurrencyException, ExternalApiConnectionError {
         // Verifying if the passed currencies are supported by the service
         if (!this.checkIfCurrencyExists(fromCode) || !this.checkIfCurrencyExists(toCode)) {
+            LOGGER.info("One of the passed currencies is not supported by the service!");
             throw new InvalidCurrencyException("Invalid currency code(s) provided!");
         }
 
         Map<String, Double> exchangeRates = new HashMap<>();
 
         // Fetching from external API
+        LOGGER.info("Fetching from external API the exchange rates from {} to {}", fromCode, toCode);
         JsonObject rates = apiService.getLatestExchanges(fromCode, Optional.of(toCode)).getAsJsonObject();
 
         exchangeRates.put(toCode, rates.get(toCode).getAsDouble());
+        LOGGER.info("Finalizing processing the call to /exchange/{currency} endpoint with parameters: from - {}; to - {}", fromCode, toCode);
         return exchangeRates;
     }
 
@@ -59,16 +62,17 @@ public class ExchangeService {
      * the key of the map)
      * @throws InvalidCurrencyException - thrown when the user has passed an invalid code, with an HTTP Status BAD REQUEST
      */
-    public Map<String, Double> getExchangeRateForAll(String code) throws InvalidCurrencyException {
-        // TODO: Add Logger and Javadoc
+    public Map<String, Double> getExchangeRateForAll(String code) throws InvalidCurrencyException, ExternalApiConnectionError {
         // Verifying if the currency is supported by the service
         if (!this.checkIfCurrencyExists(code)) {
+            LOGGER.info("The passed currency is not supported by the service!");
             throw new InvalidCurrencyException("Invalid currency code provided!");
         }
 
         Map<String, Double> exchangeRates = new HashMap<>();
 
         // Fetching from external API
+        LOGGER.info("Fetching from external API the exchange rates from {}", code);
         JsonObject rates = apiService.getLatestExchanges(code, Optional.empty()).getAsJsonObject();
 
         for(String key: rates.keySet()){
@@ -80,10 +84,12 @@ public class ExchangeService {
                 // A fetched currency isn't in the list of supported values. This means the list of supported symbols by the external
                 // API has been updated since application startup, or that they have conversion rates for a symbol not present
                 // in their /symbols endpoint. We should call the method to fetch currencies from the external API
+                LOGGER.info("Fetched currency with code {} was not on the repository! Contacting the fetchSupportedCurrencies() service", key);
                 currencyService.fetchSupportedCurrencies();
             }
         }
 
+        LOGGER.info("Finalizing processing the call to /exchange/{currency}/all endpoint with parameters: code - {}", code);
         return exchangeRates;
     }
 
