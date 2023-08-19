@@ -20,7 +20,14 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ExternalApiConnectionError.class)
     protected ResponseEntity<Object> handleIncorrectParameter(ExternalApiConnectionError ex){
-        ErrorDetails apiError = new ErrorDetails(HttpStatus.NOT_FOUND);
+        ErrorDetails apiError = new ErrorDetails(HttpStatus.BAD_GATEWAY);
+        apiError.setMessage(ex.getMessage());
+        return buildResponseEntity(apiError);
+    }
+
+    @ExceptionHandler(InvalidCurrencyException.class)
+    protected ResponseEntity<Object> handleIncorrectParameter(InvalidCurrencyException ex){
+        ErrorDetails apiError = new ErrorDetails(HttpStatus.BAD_REQUEST);
         apiError.setMessage(ex.getMessage());
         return buildResponseEntity(apiError);
     }
