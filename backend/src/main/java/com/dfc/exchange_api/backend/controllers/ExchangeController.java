@@ -20,7 +20,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/exchange")
 public class ExchangeController {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExternalApiService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExchangeController.class);
     private ExchangeService exchangeService;
 
     public ExchangeController(ExchangeService exchangeService) {
@@ -51,7 +51,7 @@ public class ExchangeController {
             @PathVariable(name = "from") String from,
             @RequestParam(name = "to") String to)
             throws InvalidCurrencyException, ExternalApiConnectionError {
-        LOGGER.info("Received a request on the /exchange/{currency} endpoint with parameters: from - {}; to - {}", from, to);
+        LOGGER.info("Received a request on the /exchange/{currency} endpoint");
 
         return ResponseEntity.ok().body(exchangeService.getExchangeRateForSpecificCurrency(from, to));
     }
@@ -68,7 +68,7 @@ public class ExchangeController {
     public ResponseEntity<Map<String, Double>> getExchangeRateForAll(
             @PathVariable(name = "from") String code)
             throws InvalidCurrencyException, ExternalApiConnectionError{
-        LOGGER.info("Received a request on the /exchange/{currency}/all endpoint with parameters: code - {}", code);
+        LOGGER.info("Received a request on the /exchange/{currency}/all endpoint");
 
         return ResponseEntity.ok().body(exchangeService.getExchangeRateForAll(code));
     }

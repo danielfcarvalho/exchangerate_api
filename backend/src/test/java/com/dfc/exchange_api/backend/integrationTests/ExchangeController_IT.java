@@ -11,7 +11,7 @@ import static org.hamcrest.Matchers.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestDatabase
-public class ExchangeController_IT {
+class ExchangeController_IT {
     private final static String BASE_URL = "http://localhost:";
 
     @LocalServerPort

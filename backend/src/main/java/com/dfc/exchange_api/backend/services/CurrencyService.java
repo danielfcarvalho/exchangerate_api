@@ -17,7 +17,7 @@ import java.util.Map;
 
 @Service
 public class CurrencyService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CurrencyDatabaseInitialization.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CurrencyService.class);
 
     private CurrencyRepository currencyRepository;
     private ExternalApiService externalApiService;
@@ -38,7 +38,6 @@ public class CurrencyService {
      */
     @Scheduled(initialDelay = 3600000, fixedRate = 3600000)
     public void fetchSupportedCurrencies() {
-        //TODO: Unit Testing
         List<Currency> supportedCurrencies = new ArrayList<>();
 
         // Fetching supported currencies by the external API
@@ -55,7 +54,7 @@ public class CurrencyService {
                 if (currencyRepository.findByCode(code).isEmpty()) {
                     // If currency is not already in the repository
                     Currency currentCurrency = new Currency(description, code);
-                    LOGGER.info("Fetched currency: " + currentCurrency.toString());
+                    LOGGER.info("Fetched currency: {}", currentCurrency.toString());
                     supportedCurrencies.add(currentCurrency);
                 }
             }

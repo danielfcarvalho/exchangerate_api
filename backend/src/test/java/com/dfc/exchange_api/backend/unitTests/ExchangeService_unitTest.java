@@ -87,8 +87,8 @@ class ExchangeService_unitTest {
         // Verify the result is as expected
         Map<String, Double> exchangeRate = exchangeService.getExchangeRateForAll("EUR");
 
-        assertThat(exchangeRate.keySet()).containsOnly("AMD", "ANG", "USD");
-        assertThat(exchangeRate.get("USD")).isEqualTo(1.088186);
+        assertThat(exchangeRate).containsOnlyKeys("AMD", "ANG", "USD");
+        assertThat(exchangeRate).containsEntry("USD",1.088186);
 
         // TODO: Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
         verify(externalApiService, times(1)).getLatestExchanges("EUR", Optional.empty());
@@ -153,8 +153,8 @@ class ExchangeService_unitTest {
         // Verify the result is as expected
         Map<String, Double> exchangeRate = exchangeService.getExchangeRateForSpecificCurrency("EUR", "USD");
 
-        assertThat(exchangeRate.keySet()).containsOnly("USD");
-        assertThat(exchangeRate.get("USD")).isEqualTo(1.088186);
+        assertThat(exchangeRate).containsOnlyKeys("USD");
+        assertThat(exchangeRate).containsEntry("USD", 1.088186);
 
         // TODO: Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
         verify(externalApiService, times(1)).getLatestExchanges("EUR", Optional.of("USD"));

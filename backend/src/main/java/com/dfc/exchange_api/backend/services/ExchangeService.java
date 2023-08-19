@@ -15,7 +15,7 @@ import java.util.Optional;
 
 @Service
 public class ExchangeService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExternalApiService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExchangeService.class);
     private ExternalApiService apiService;
     private CurrencyRepository currencyRepository;
     private CurrencyService currencyService;
@@ -45,11 +45,11 @@ public class ExchangeService {
         Map<String, Double> exchangeRates = new HashMap<>();
 
         // Fetching from external API
-        LOGGER.info("Fetching from external API the exchange rates from {} to {}", fromCode, toCode);
+        LOGGER.info("Fetching from external API the exchange rates from {} to {}", fromCode.replaceAll("[\n\r]", "_"), toCode.replaceAll("[\n\r]", "_"));
         JsonObject rates = apiService.getLatestExchanges(fromCode, Optional.of(toCode)).getAsJsonObject();
 
         exchangeRates.put(toCode, rates.get(toCode).getAsDouble());
-        LOGGER.info("Finalizing processing the call to /exchange/{currency} endpoint with parameters: from - {}; to - {}", fromCode, toCode);
+        LOGGER.info("Finalizing processing the call to /exchange/{currency} endpoint with parameters: from - {}; to - {}", fromCode.replaceAll("[\n\r]", "_"), toCode.replaceAll("[\n\r]", "_"));
         return exchangeRates;
     }
 
@@ -72,7 +72,7 @@ public class ExchangeService {
         Map<String, Double> exchangeRates = new HashMap<>();
 
         // Fetching from external API
-        LOGGER.info("Fetching from external API the exchange rates from {}", code);
+        LOGGER.info("Fetching from external API the exchange rates from {}", code.replaceAll("[\n\r]", "_"));
         JsonObject rates = apiService.getLatestExchanges(code, Optional.empty()).getAsJsonObject();
 
         for(String key: rates.keySet()){
