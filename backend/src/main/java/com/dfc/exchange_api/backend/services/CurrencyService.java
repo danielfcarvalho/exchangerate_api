@@ -7,6 +7,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -30,7 +31,11 @@ public class CurrencyService {
      * endpoint. Then, it will parse the obtained JSON Object, corresponding to an array in which each entry is a currency,
      * and will create an instance of the Currency object. In the end, it will save all Currency objects in the currency repository,
      * thus storing it in the in-memory H2 database.
+     * This method is scheduled to run every hour, to check whether the list of supported symbols by the External API has been
+     * updated or not. Thus, before adding a currency to the repository, we check whether or not that currency is already stored
+     * (to avoid the creation of duplicates).
      */
+    @Scheduled(initialDelay = 3600000, fixedRate = 3600000)
     public void fetchSupportedCurrencies() {
         //TODO: Unit Testing
         List<Currency> supportedCurrencies = new ArrayList<>();
@@ -52,8 +57,9 @@ public class CurrencyService {
             }
         }
 
-        // Adding the currencies to the in-memory database
-        LOGGER.info("Finalized fetching all supported currencies.");
-        currencyRepository.saveAll(supportedCurrencies);
+        if (!supportedCurrencies.isEmpty()) {
+            LOGGER.info("Adding new supported currencies to the repository.");
+            currencyRepository.saveAll(supportedCurrencies);
+        }
     }
 }

@@ -20,7 +20,7 @@ public class CurrencyDatabaseInitialization implements CommandLineRunner {
     }
 
     /**
-     * Will call the currencyService's fetchSupportedCurrencies() method at application startup, to ensure that all of the
+     * Will call the currencyService's fetchSupportedCurrencies() method at application startup, to ensure that all the
      * supported currencies from the external API are saved in the in-memory database.
      * @param args
      * @throws Exception

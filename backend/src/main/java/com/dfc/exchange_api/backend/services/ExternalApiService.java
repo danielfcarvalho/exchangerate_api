@@ -102,7 +102,7 @@ public class ExternalApiService {
      * @param uri - The URI path of the External API endpoint to be called
      * @param memberName - The name of the member of the JSON Response that the calling method wants to see being returned.
      *                   It will be fetched using Gson's JSON Parser
-     * @param isJsonPrimitive - A boolen that checks whether the Json Element to be returned from the parsing is a JsonPrimitive, or a JsonObject.
+     * @param isJsonPrimitive - A boolean that checks whether the Json Element to be returned from the parsing is a JsonPrimitive, or a JsonObject.
      *                        This is because the use of JsonParser requires the extraction to be made either using a getAsJsonPrimitive() method,
      *                        or a getAsJsonObject() method, and JsonPrimitive elements cannot be casted to JsonObject.
      * @return the JsonElement that is of interest to the calling method.

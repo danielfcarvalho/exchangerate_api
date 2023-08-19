@@ -25,15 +25,46 @@ public class ExchangeService {
         this.currencyService = currencyService;
     }
 
-    public Map<String, Double> getExchangeRateForSpecificCurrency(String fromCode, String toCode) {
-        return null;
+    /**
+     * This method returns the exchange rate from a currency A to a currency B. To do so, it contacts the external API at
+     * the /latest endpoint.
+     * @param fromCode - the code for Currency A
+     * @param toCode - the code for Currency B
+     * @return a Map<String, Double> containing the exchange rate
+     * @throws InvalidCurrencyException - if either of the currency codes passed as parameters by the user is not supported
+     * by the API, throws this exception with the HTTP Status BAD REQUEST
+     */
+    public Map<String, Double> getExchangeRateForSpecificCurrency(String fromCode, String toCode) throws InvalidCurrencyException{
+        //TODO: Logging
+        // Verifying if the passed currencies are supported by the service
+        if (!this.checkIfCurrencyExists(fromCode) || !this.checkIfCurrencyExists(toCode)) {
+            throw new InvalidCurrencyException("Invalid currency code(s) provided!");
+        }
+
+        Map<String, Double> exchangeRates = new HashMap<>();
+
+        // Fetching from external API
+        JsonObject rates = apiService.getLatestExchanges(fromCode, Optional.of(toCode)).getAsJsonObject();
+
+        exchangeRates.put(toCode, rates.get(toCode).getAsDouble());
+        return exchangeRates;
     }
 
 
+    /**
+     * This method returns all the exchange rates for a given currency. To do so, it contacts the external API at the
+     * /latest endpoint, using the currency as the base parameter, via the ExternalApiService.
+     * @param code - the code of the currency to be fetched
+     * @return a Map<String, Double> containing the exchange rate for each supported currency (with their code being
+     * the key of the map)
+     * @throws InvalidCurrencyException - thrown when the user has passed an invalid code, with an HTTP Status BAD REQUEST
+     */
     public Map<String, Double> getExchangeRateForAll(String code) throws InvalidCurrencyException {
         // TODO: Add Logger and Javadoc
         // Verifying if the currency is supported by the service
-        Currency coin = currencyRepository.findByCode(code).orElseThrow(() -> new InvalidCurrencyException(code + " is not a valid currency code!"));
+        if (!this.checkIfCurrencyExists(code)) {
+            throw new InvalidCurrencyException("Invalid currency code provided!");
+        }
 
         Map<String, Double> exchangeRates = new HashMap<>();
 
@@ -54,5 +85,15 @@ public class ExchangeService {
         }
 
         return exchangeRates;
+    }
+
+    /**
+     * Auxilliary method that checks if a code passed as a parameter by the user in an API request belongs to a supported
+     * currency or not.
+     * @param code - the code of the Currency to be checked
+     * @return a boolean representing whether the code is supported or not by the API
+     */
+    private boolean checkIfCurrencyExists(String code) {
+        return currencyRepository.existsByCode(code);
     }
 }
