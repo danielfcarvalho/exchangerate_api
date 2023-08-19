@@ -1,5 +1,6 @@
 package com.dfc.exchange_api.backend.services;
 
+import com.dfc.exchange_api.backend.exceptions.ExternalApiConnectionError;
 import com.dfc.exchange_api.backend.models.Currency;
 import com.dfc.exchange_api.backend.repositories.CurrencyRepository;
 import com.dfc.exchange_api.backend.utils.CurrencyDatabaseInitialization;
@@ -42,24 +43,30 @@ public class CurrencyService {
 
         // Fetching supported currencies by the external API
         LOGGER.info("Fetching list of supported currencies by the external API....");
-        JsonObject currenciesJSON = externalApiService.getAvailableCurrencies().getAsJsonObject();
 
-        for (Map.Entry<String, JsonElement> entry: currenciesJSON.entrySet()){
-            JsonObject currentObject = entry.getValue().getAsJsonObject(); // {"description": ..., "code": ....}
-            String description = currentObject.getAsJsonPrimitive("description").getAsString();
-            String code = currentObject.getAsJsonPrimitive("code").getAsString();
+        try {
+            JsonObject currenciesJSON = externalApiService.getAvailableCurrencies().getAsJsonObject();
 
-            if(currencyRepository.findByCode(code).isEmpty()){
-                // If currency is not already in the repository
-                Currency currentCurrency = new Currency(description, code);
-                LOGGER.info("Fetched currency: " + currentCurrency.toString());
-                supportedCurrencies.add(currentCurrency);
+            for (Map.Entry<String, JsonElement> entry : currenciesJSON.entrySet()) {
+                JsonObject currentObject = entry.getValue().getAsJsonObject(); // {"description": ..., "code": ....}
+                String description = currentObject.getAsJsonPrimitive("description").getAsString();
+                String code = currentObject.getAsJsonPrimitive("code").getAsString();
+
+                if (currencyRepository.findByCode(code).isEmpty()) {
+                    // If currency is not already in the repository
+                    Currency currentCurrency = new Currency(description, code);
+                    LOGGER.info("Fetched currency: " + currentCurrency.toString());
+                    supportedCurrencies.add(currentCurrency);
+                }
+            }
+
+            if (!supportedCurrencies.isEmpty()) {
+                LOGGER.info("Adding new supported currencies to the repository.");
+                currencyRepository.saveAll(supportedCurrencies);
             }
         }
-
-        if (!supportedCurrencies.isEmpty()) {
-            LOGGER.info("Adding new supported currencies to the repository.");
-            currencyRepository.saveAll(supportedCurrencies);
-        }
+        catch(ExternalApiConnectionError e){
+                LOGGER.info("Could not connext to External API");
+            }
     }
 }

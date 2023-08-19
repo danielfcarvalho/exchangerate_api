@@ -108,7 +108,7 @@ public class ExternalApiService {
      * @return the JsonElement that is of interest to the calling method.
      */
     @Retryable(value = { TimeoutException.class }, maxAttempts = 3, backoff = @Backoff(delay = 1000))
-    private JsonElement doHttpGet(URI uri, String memberName, boolean isJsonPrimitive) {
+    private JsonElement doHttpGet(URI uri, String memberName, boolean isJsonPrimitive) throws ExternalApiConnectionError {
         try{
             LOGGER.info("Calling the Exchange Rate API on the following path: " + uri);
             String response = restTemplate.getForObject(uri, String.class);
