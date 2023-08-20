@@ -26,6 +26,7 @@ public class ConversionService {
     }
 
     public Map<String, Double> getConversionForSpecificCurrency(String fromCode, String toCode, Double amount) throws InvalidCurrencyException, ExternalApiConnectionError {
+        //TODO: Javadoc After adding cache
         // Verifying if the passed currencies are supported by the service
         if (!this.checkIfCurrencyExists(fromCode) || !this.checkIfCurrencyExists(toCode)) {
             LOGGER.info("One of the passed currencies is not supported by the service!");
@@ -50,6 +51,7 @@ public class ConversionService {
 
 
     public Map<String, Double> getConversionForVariousCurrencies(String code, String toCurrencies, Double amount) throws InvalidCurrencyException, ExternalApiConnectionError {
+        //TODO: Javadoc After adding cache
         // Verifying if the currencies are supported by the service
         List<String> currencyCodes = new ArrayList<>(Arrays.asList(toCurrencies.split(",")));
         currencyCodes.add(code);

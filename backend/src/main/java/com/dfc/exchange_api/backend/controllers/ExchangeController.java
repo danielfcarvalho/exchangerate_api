@@ -30,7 +30,7 @@ public class ExchangeController {
      * This endpoint is used to fetch the exchange rate from a currency A to a Currency B.
      * @param from - the code of currency A
      * @param to - the code of currency B
-     * @return A response entity containing a Map with the value of the conversion rate for each supported currency, and
+     * @return A response entity containing a Map with the value of the conversion rate for the specified currency, and
      * with HTTP status code OK.
      * @throws InvalidCurrencyException - In case either the currency A or B are not supported or have an invalid code,
      * this exception is thrown with HTTP status BAD REQUEST.
@@ -44,7 +44,7 @@ public class ExchangeController {
                     content = @Content),
             @ApiResponse(responseCode = "402", description = "Error connecting to external API",
                     content = @Content),})
-    @Operation(summary = "Get the exchange rates from a currency to all other supported currencies")
+    @Operation(summary = "Get the exchange rates from a currency A to a currency B")
     @GetMapping("/{from}")
     public ResponseEntity<Map<String, Double>> getExchangeRateForSpecificCurrency(
             @PathVariable(name = "from") String from,
@@ -55,6 +55,16 @@ public class ExchangeController {
         return ResponseEntity.ok().body(exchangeService.getExchangeRateForSpecificCurrency(from, to));
     }
 
+    /**
+     * This endpoint is used to fetch the exchange rate from a currency A to all of the supported currencies.
+     * @param code - the code of currency A
+     * @return A response entity containing a Map with the value of the conversion rate for each supported currency, and
+     * with HTTP status code OK.
+     * @throws InvalidCurrencyException - In case currency A is not supported or has an invalid code,
+     * this exception is thrown with HTTP status BAD REQUEST.
+     * @throws ExternalApiConnectionError - In case communication with the External API fails, this exception is thrown
+     * with Http Status BAD GATEWAY.
+     */
     @GetMapping("/{from}/all")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Valid currency code",
@@ -63,7 +73,7 @@ public class ExchangeController {
                     content = @Content),
             @ApiResponse(responseCode = "402", description = "Error connecting to external API",
                     content = @Content),})
-    @Operation(summary = "Get the exchange rates from a currency A to a currency B")
+    @Operation(summary = "Get the exchange rates from a currency to all other supported currencies")
     public ResponseEntity<Map<String, Double>> getExchangeRateForAll(
             @PathVariable(name = "from") String code)
             throws InvalidCurrencyException, ExternalApiConnectionError{

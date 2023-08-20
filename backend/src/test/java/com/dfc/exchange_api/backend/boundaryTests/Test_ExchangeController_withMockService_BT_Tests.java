@@ -30,16 +30,6 @@ class Test_ExchangeController_withMockService_BT_Tests {
     @MockBean
     private ExchangeService exchangeService;
 
-    @BeforeEach
-    void setUp(){
-
-    }
-
-    @AfterEach
-    void tearDown(){
-
-    }
-
     @Test
     void whenGettingExchangeRateForAll_withValidInput_thenReturnOK() throws Exception {
         Map<String, Double> returnedExchanges = new HashMap<>();
