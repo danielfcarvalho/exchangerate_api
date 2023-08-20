@@ -4,8 +4,6 @@ import com.dfc.exchange_api.backend.controllers.ExchangeController;
 import com.dfc.exchange_api.backend.exceptions.ExternalApiConnectionError;
 import com.dfc.exchange_api.backend.exceptions.InvalidCurrencyException;
 import com.dfc.exchange_api.backend.services.ExchangeService;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;

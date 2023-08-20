@@ -47,7 +47,7 @@ class ExchangeController_IT {
     void whenGettingExchangeRateForSpecificCurrency_withValidInput_NotInCache_thenContactExternalAPI() {
         RestAssured.given().contentType("application/json")
                 .when()
-                .get(BASE_URL + randomServerPort + "/api/v1/exchange/EUR/all?to=USD")
+                .get(BASE_URL + randomServerPort + "/api/v1/exchange/EUR?to=USD")
                 .then()
                 .statusCode(200)
                 .assertThat()
@@ -65,7 +65,7 @@ class ExchangeController_IT {
     void whenGettingExchangeRateForSpecificCurrency_withInvalidFromInput_thenThrowException() {
         RestAssured.given().contentType("application/json")
                 .when()
-                .get(BASE_URL + randomServerPort + "/api/v1/exchange/ZZZ/all?to=USD")
+                .get(BASE_URL + randomServerPort + "/api/v1/exchange/ZZZ?to=USD")
                 .then()
                 .statusCode(400);
     }
