@@ -3,7 +3,6 @@ package com.dfc.exchange_api.backend.controllers;
 import com.dfc.exchange_api.backend.exceptions.ExternalApiConnectionError;
 import com.dfc.exchange_api.backend.exceptions.InvalidCurrencyException;
 import com.dfc.exchange_api.backend.services.ExchangeService;
-import com.dfc.exchange_api.backend.services.ExternalApiService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

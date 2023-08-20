@@ -3,7 +3,6 @@ package com.dfc.exchange_api.backend.services;
 import com.dfc.exchange_api.backend.exceptions.ExternalApiConnectionError;
 import com.dfc.exchange_api.backend.models.Currency;
 import com.dfc.exchange_api.backend.repositories.CurrencyRepository;
-import com.dfc.exchange_api.backend.utils.CurrencyDatabaseInitialization;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
@@ -54,7 +53,7 @@ public class CurrencyService {
                 if (currencyRepository.findByCode(code).isEmpty()) {
                     // If currency is not already in the repository
                     Currency currentCurrency = new Currency(description, code);
-                    LOGGER.info("Fetched currency: {}", currentCurrency.toString());
+                    LOGGER.info("Fetched currency: {}", currentCurrency);
                     supportedCurrencies.add(currentCurrency);
                 }
             }
