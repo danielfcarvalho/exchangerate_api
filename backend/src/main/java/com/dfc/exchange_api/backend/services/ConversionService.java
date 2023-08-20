@@ -9,9 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class ConversionService {
@@ -34,36 +32,52 @@ public class ConversionService {
             throw new InvalidCurrencyException("Invalid currency code(s) provided!");
         }
 
-        Map<String, Double> exchangeRates = new HashMap<>();
+        Map<String, Double> conversionValue = new HashMap<>();
+
+        //TODO: Check if exchange rate is in the Cache
 
         // Fetching from external API
         LOGGER.info("Fetching from external API the exchange rates from {} to {}", fromCode.replaceAll(INPUT_REGEX, "_"), toCode.replaceAll(INPUT_REGEX, "_"));
         JsonObject rates = apiService.getLatestExchanges(fromCode, Optional.of(toCode)).getAsJsonObject();
 
-        exchangeRates.put(toCode, rates.get(toCode).getAsDouble());
-        LOGGER.info("Finalizing processing the call to /exchange/{currency} endpoint with parameters: from - {}; to - {}", fromCode.replaceAll(INPUT_REGEX, "_"), toCode.replaceAll(INPUT_REGEX,"_"));
-        return exchangeRates;
+        //TODO: Add exchange Rates to Cache
+
+        // Calculating the conversion rates
+        conversionValue.put(toCode, rates.get(toCode).getAsDouble() * amount);
+        LOGGER.info("Finalizing processing the call to /convert/{from} endpoint with parameters: from - {}; to - {}", fromCode.replaceAll(INPUT_REGEX, "_"), toCode.replaceAll(INPUT_REGEX,"_"));
+        return conversionValue;
     }
 
 
-    public Map<String, Double> getConversionForAll(String code, String toCurrencies, Double amount) throws InvalidCurrencyException, ExternalApiConnectionError {
-        // Verifying if the currency is supported by the service
-        if (!this.checkIfCurrencyExists(code)) {
-            LOGGER.info("The passed currency is not supported by the service!");
-            throw new InvalidCurrencyException("Invalid currency code provided!");
-        }
+    public Map<String, Double> getConversionForVariousCurrencies(String code, String toCurrencies, Double amount) throws InvalidCurrencyException, ExternalApiConnectionError {
+        // Verifying if the currencies are supported by the service
+        List<String> currencyCodes = new ArrayList<>(Arrays.asList(toCurrencies.split(",")));
+        currencyCodes.add(code);
 
-        Map<String, Double> exchangeRates = new HashMap<>();
+        currencyCodes.forEach(x -> {
+                if (!this.checkIfCurrencyExists(x)) {
+                    LOGGER.info("The passed currency {} is not supported by the service!", x);
+                    throw new InvalidCurrencyException("Invalid currency code " + x + " provided!");
+                }
+            }
+        );
+
+        Map<String, Double> conversionValue = new HashMap<>();
+
+        //TODO: Check if exchange rates are in the Cache
+
 
         // Fetching from external API
-        LOGGER.info("Fetching from external API the exchange rates from {}", code.replaceAll(INPUT_REGEX, "_"));
-        JsonObject rates = apiService.getLatestExchanges(code, Optional.empty()).getAsJsonObject();
+        //TODO: Do only for coins who are not in the Cache
+        LOGGER.info("Fetching from external API the exchange rates from {} to {}", code.replaceAll(INPUT_REGEX, "_"), toCurrencies.replaceAll(INPUT_REGEX, "_"));
+        JsonObject rates = apiService.getLatestExchanges(code, Optional.of(toCurrencies)).getAsJsonObject();
 
         for(String key: rates.keySet()){
+            //TODO: Add to cache
             Optional<Currency> exchangedCurrency = currencyRepository.findByCode(key);
 
             if(exchangedCurrency.isPresent()){
-                exchangeRates.put(exchangedCurrency.get().getCode(), rates.get(key).getAsDouble());
+                conversionValue.put(exchangedCurrency.get().getCode(), rates.get(key).getAsDouble() * amount);
             }else{
                 // A fetched currency isn't in the list of supported values. This means the list of supported symbols by the external
                 // API has been updated since application startup, or that they have conversion rates for a symbol not present
@@ -74,7 +88,7 @@ public class ConversionService {
         }
 
         LOGGER.info("Finalizing processing the call to /exchange/{currency}/all endpoint with parameters: code - {}", code);
-        return exchangeRates;
+        return conversionValue;
     }
 
     /**

@@ -15,9 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.util.Map;
 import java.util.Optional;
@@ -89,7 +87,7 @@ class ConversionService_unitTest {
         when(currencyRepository.findByCode("USD")).thenReturn(Optional.of(dollar));
 
         // Verify the result is as expected
-        Map<String, Double> exchangeRate = conversionService.getConversionForAll("EUR", "AMD,ANG,USD", 50.0);
+        Map<String, Double> exchangeRate = conversionService.getConversionForVariousCurrencies("EUR", "AMD,ANG,USD", 50.0);
 
         assertThat(exchangeRate).containsOnlyKeys("AMD", "ANG", "USD")
                 .containsEntry("USD",54.4093)
@@ -97,7 +95,7 @@ class ConversionService_unitTest {
                 .containsEntry("ANG",98.28195);
 
         // TODO: Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
-        verify(externalApiService, times(1)).getLatestExchanges("EUR", Mockito.any());
+        verify(externalApiService, times(1)).getLatestExchanges("EUR", Optional.of("AMD,ANG,USD"));
     }
 
     @Test
@@ -119,15 +117,15 @@ class ConversionService_unitTest {
         when(currencyRepository.existsByCode("AMD")).thenReturn(true);
         when(currencyRepository.existsByCode("ANG")).thenReturn(true);
         when(currencyRepository.existsByCode("USD")).thenReturn(true);
-        when(externalApiService.getLatestExchanges("EUR", Optional.empty())).thenThrow(new ExternalApiConnectionError("External API request failed"));
+        when(externalApiService.getLatestExchanges("EUR", Optional.of("AMD,ANG,USD"))).thenThrow(new ExternalApiConnectionError("External API request failed"));
 
         // Verify the result is as expected
-        assertThatThrownBy(() -> conversionService.getConversionForAll("EUR", "AMD,ANG,USD", 50.0))
+        assertThatThrownBy(() -> conversionService.getConversionForVariousCurrencies("EUR", "AMD,ANG,USD", 50.0))
                 .isInstanceOf(ExternalApiConnectionError.class)
                 .hasMessage("External API request failed");
 
         // TODO: Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
-        verify(externalApiService, times(1)).getLatestExchanges("EUR", Optional.empty());
+        verify(externalApiService, times(1)).getLatestExchanges("EUR", Optional.of("AMD,ANG,USD"));
     }
 
     @Test
@@ -139,9 +137,9 @@ class ConversionService_unitTest {
         when(currencyRepository.existsByCode("USD")).thenReturn(true);
 
         // Verify the result is as expected
-        assertThatThrownBy(() -> conversionService.getConversionForAll("ZZZ", "AMD,ANG,USD", 50.0))
+        assertThatThrownBy(() -> conversionService.getConversionForVariousCurrencies("ZZZ", "AMD,ANG,USD", 50.0))
                 .isInstanceOf(InvalidCurrencyException.class)
-                .hasMessage("Invalid currency code provided!");
+                .hasMessage("Invalid currency code ZZZ provided!");
 
     }
 
@@ -154,9 +152,9 @@ class ConversionService_unitTest {
         when(currencyRepository.existsByCode("USD")).thenReturn(true);
 
         // Verify the result is as expected
-        assertThatThrownBy(() -> conversionService.getConversionForAll("AMD", "ZZZ,ANG,USD", 50.0))
+        assertThatThrownBy(() -> conversionService.getConversionForVariousCurrencies("AMD", "ZZZ,ANG,USD", 50.0))
                 .isInstanceOf(InvalidCurrencyException.class)
-                .hasMessage("Invalid currency code provided!");
+                .hasMessage("Invalid currency code ZZZ provided!");
 
     }
 

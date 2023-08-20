@@ -50,7 +50,7 @@ public class ExchangeService {
         JsonObject rates = apiService.getLatestExchanges(fromCode, Optional.of(toCode)).getAsJsonObject();
 
         exchangeRates.put(toCode, rates.get(toCode).getAsDouble());
-        LOGGER.info("Finalizing processing the call to /exchange/{currency} endpoint with parameters: from - {}; to - {}", fromCode.replaceAll(INPUT_REGEX, "_"), toCode.replaceAll(INPUT_REGEX,"_"));
+        LOGGER.info("Finalizing processing the call to /exchange/{from} endpoint with parameters: from - {}; to - {}", fromCode.replaceAll(INPUT_REGEX, "_"), toCode.replaceAll(INPUT_REGEX,"_"));
         return exchangeRates;
     }
 
@@ -90,7 +90,7 @@ public class ExchangeService {
             }
         }
 
-        LOGGER.info("Finalizing processing the call to /exchange/{currency}/all endpoint with parameters: code - {}", code);
+        LOGGER.info("Finalizing processing the call to /exchange/{from}/all endpoint with parameters: code - {}", code);
         return exchangeRates;
     }
 

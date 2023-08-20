@@ -48,7 +48,7 @@ public class ConversionController {
         return null;
     }
 
-    @GetMapping("/{from}/all")
+    @GetMapping("/{from}/various")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Valid currency code",
                     content = @Content),
