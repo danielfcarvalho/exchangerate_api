@@ -37,9 +37,10 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public void handleConstraintViolationException(ConstraintViolationException exception,
-                                                   ServletWebRequest webRequest) throws IOException {
-        webRequest.getResponse().sendError(HttpStatus.BAD_REQUEST.value(), exception.getMessage());
+    protected ResponseEntity<Object> handleConstraintViolationException(ConstraintViolationException ex) {
+        ErrorDetails apiError = new ErrorDetails(HttpStatus.BAD_REQUEST);
+        apiError.setMessage(ex.getMessage());
+        return buildResponseEntity(apiError);
     }
 
 }
