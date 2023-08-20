@@ -27,7 +27,7 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 
 @ExtendWith(MockitoExtension.class)
-public class ExternalApiService_unitTest {
+class ExternalApiService_unitTest {
     @Mock
     RestTemplate mockRestTemplate;
     @InjectMocks

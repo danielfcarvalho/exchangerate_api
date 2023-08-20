@@ -25,7 +25,7 @@ import java.util.concurrent.TimeoutException;
 public class ExternalApiService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExternalApiService.class);
     private final RestTemplate restTemplate;
-    private final String BASE_URL = "https://api.exchangerate.host";
+    private static final String BASE_URL = "https://api.exchangerate.host";
 
     public ExternalApiService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -110,7 +110,7 @@ public class ExternalApiService {
     @Retryable(value = { TimeoutException.class }, maxAttempts = 3, backoff = @Backoff(delay = 1000))
     private JsonElement doHttpGet(URI uri, String memberName, boolean isJsonPrimitive) throws ExternalApiConnectionError {
         try{
-            LOGGER.info("Calling the Exchange Rate API on the following path: " + uri);
+            LOGGER.info("Calling the Exchange Rate API on the following path: {}", uri);
             String response = restTemplate.getForObject(uri, String.class);
             LOGGER.info("Full response as String: {}", response);
 

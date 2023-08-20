@@ -1,12 +1,16 @@
 package com.dfc.exchange_api.backend.exceptions;
 
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
+import java.io.IOException;
 
 /**
  * Exception Handler for the Custom Exceptions Created in this REST API.
@@ -27,6 +31,13 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(InvalidCurrencyException.class)
     protected ResponseEntity<Object> handleIncorrectParameter(InvalidCurrencyException ex){
+        ErrorDetails apiError = new ErrorDetails(HttpStatus.BAD_REQUEST);
+        apiError.setMessage(ex.getMessage());
+        return buildResponseEntity(apiError);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    protected ResponseEntity<Object> handleConstraintViolationException(ConstraintViolationException ex) {
         ErrorDetails apiError = new ErrorDetails(HttpStatus.BAD_REQUEST);
         apiError.setMessage(ex.getMessage());
         return buildResponseEntity(apiError);
