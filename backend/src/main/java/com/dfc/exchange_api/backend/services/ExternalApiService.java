@@ -57,29 +57,6 @@ public class ExternalApiService {
     }
 
     /**
-     * This method contacts the /conversion endpoint in the Exchange Rate API, which converts a value from currency A
-     * to currency B using the latest conversion rate between both.
-     * In this case, the method will parse the fetched JSON response and return a JsonElement to be used by the other service
-     * methods that depend on this endpoint.
-     * In case the External API doesn't reply with an HTTP STATUS OK message, either a customized exception is thrown, or
-     * the endpoint is contacted again using @Retryable, in the case of a TIMEOUT.
-     * @param from - the Currency from which the converted value is taken from
-     * @param to - the Currency to which the conversion is made
-     * @param amount - quantity to be converted
-     * @return a JSON Primitive with the value of the conversion
-     * @throws ExternalApiConnectionError
-     */
-    public JsonElement getConversionValues(String from, String to, Double amount) throws ExternalApiConnectionError {
-        // Calling the External API
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL).path("/convert")
-                .queryParam("from", from).queryParam("to", to).queryParam("amount", amount);
-        URI uri = uriBuilder.build().toUri();
-
-        // Calling the endpoint and fetching the required JsonElement
-        return this.doHttpGet(uri, "result", true);
-    }
-
-    /**
      * This method contacts the /symbols endpoint in the external API, retrieving the full list of supported currencies
      * by said API.
      * @return JsonArray, in which each element holds the description and code for each currency.

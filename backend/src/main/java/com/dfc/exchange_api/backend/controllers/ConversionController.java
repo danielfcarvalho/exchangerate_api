@@ -57,7 +57,7 @@ public class ConversionController {
             throws InvalidCurrencyException, ExternalApiConnectionError {
         LOGGER.info("Received a request on the /convert/{from} endpoint");
 
-        return ResponseEntity.ok().body(conversionService.getConversionForSpecificCurrency(from, to, amount));
+        return ResponseEntity.ok().body(Map.of(to, conversionService.getConversionForSpecificCurrency(from, to, amount)));
     }
 
     /**
