@@ -15,6 +15,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,6 +39,7 @@ class CurrencyService_unitTest {
     Currency dirham;
     Currency afghani;
     Currency lek;
+    Currency euro;
 
 
     @BeforeEach
@@ -43,6 +47,7 @@ class CurrencyService_unitTest {
         dirham = new Currency("United Arab Emirates Dirham", "AED");
         afghani = new Currency("Afghan Afghani", "AFN");
         lek = new Currency("Albanian Lek", "ALL");
+        euro = new Currency("Euro", "EUR");
     }
 
     @AfterEach
@@ -81,6 +86,7 @@ class CurrencyService_unitTest {
 
         when(externalApiService.getAvailableCurrencies()).thenReturn(symbols);
         when(currencyRepository.findByCode(anyString())).thenReturn(Optional.empty());
+        when(currencyRepository.findAll()).thenReturn(Collections.emptyList());
 
         // Call the method under test
         currencyService.fetchSupportedCurrencies();
@@ -116,15 +122,62 @@ class CurrencyService_unitTest {
 
         JsonElement symbols = JsonParser.parseString(mockResponse).getAsJsonObject().get("symbols");
 
+        List<Currency> existingCurrencies = List.of(dirham, afghani, lek);
+
         when(externalApiService.getAvailableCurrencies()).thenReturn(symbols);
         when(currencyRepository.findByCode("AED")).thenReturn(Optional.of(dirham));
         when(currencyRepository.findByCode("AFN")).thenReturn(Optional.of(afghani));
         when(currencyRepository.findByCode("ALL")).thenReturn(Optional.of(lek));
+        when(currencyRepository.findAll()).thenReturn(existingCurrencies);
 
         // Call the method under test
         currencyService.fetchSupportedCurrencies();
 
         // Verify that the repository's saveAll method was called
         verify(currencyRepository, never()).saveAll(anyList());
+    }
+
+    @Test
+    void testFetchSupportedCurrencies_repositoryNotEmpty_hasToDeleteOutdatedCurrencies() {
+        // Setting up Expectations
+        String mockResponse = "{\n" +
+                "    \"motd\": {\n" +
+                "        \"msg\": \"If you or your company use this project or like what we doing, please consider backing us so we can continue maintaining and evolving this project.\",\n" +
+                "        \"url\": \"https://exchangerate.host/#/donate\"\n" +
+                "    },\n" +
+                "    \"success\": true,\n" +
+                "    \"symbols\": {\n" +
+                "        \"AED\": {\n" +
+                "            \"description\": \"United Arab Emirates Dirham\",\n" +
+                "            \"code\": \"AED\"\n" +
+                "        },\n" +
+                "        \"AFN\": {\n" +
+                "            \"description\": \"Afghan Afghani\",\n" +
+                "            \"code\": \"AFN\"\n" +
+                "        },\n" +
+                "        \"ALL\": {\n" +
+                "            \"description\": \"Albanian Lek\",\n" +
+                "            \"code\": \"ALL\"\n" +
+                "        }\n" +
+                "    }\n" +
+                "}";
+
+        JsonElement symbols = JsonParser.parseString(mockResponse).getAsJsonObject().get("symbols");
+
+        List<Currency> existingCurrencies = List.of(dirham, afghani, euro, lek);
+
+        when(externalApiService.getAvailableCurrencies()).thenReturn(symbols);
+        when(currencyRepository.findByCode("AED")).thenReturn(Optional.of(dirham));
+        when(currencyRepository.findByCode("AFN")).thenReturn(Optional.of(afghani));
+        when(currencyRepository.findByCode("ALL")).thenReturn(Optional.of(lek));
+        when(currencyRepository.findAll()).thenReturn(existingCurrencies);
+
+        // Call the method under test
+        currencyService.fetchSupportedCurrencies();
+
+        // Verify that the repository's saveAll method was never called, and that the delete method was called for no longer supported "EUR"
+        verify(currencyRepository, never()).saveAll(anyList());
+        verify(currencyRepository).deleteAll(List.of(euro));
+
     }
 }

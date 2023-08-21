@@ -10,9 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class CurrencyService {
@@ -45,6 +44,20 @@ public class CurrencyService {
         try {
             JsonObject currenciesJSON = externalApiService.getAvailableCurrencies().getAsJsonObject();
 
+            // Fetching any previously supported currencies that are no longer supported
+            Set<String> currentlySupportedCurrencies = currenciesJSON.keySet();
+            List<Currency> outdatedCurrencies = currencyRepository.findAll()
+                    .stream()
+                    .filter(currency -> !currentlySupportedCurrencies.contains(currency.getCode()))
+                    .toList();
+
+            // Deleting no longer supported currencies
+            if(!outdatedCurrencies.isEmpty()){
+                LOGGER.info("Detected outdated currencies. They will be removed from the repository.");
+                currencyRepository.deleteAll(outdatedCurrencies);
+            }
+
+            // Checking if any of the fetched currencies is new; adding new currencies to the repository
             for (Map.Entry<String, JsonElement> entry : currenciesJSON.entrySet()) {
                 JsonObject currentObject = entry.getValue().getAsJsonObject(); // {"description": ..., "code": ....}
                 String description = currentObject.getAsJsonPrimitive("description").getAsString();
