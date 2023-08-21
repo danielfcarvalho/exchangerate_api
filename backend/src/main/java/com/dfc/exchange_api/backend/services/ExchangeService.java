@@ -7,6 +7,9 @@ import com.dfc.exchange_api.backend.repositories.CurrencyRepository;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -20,44 +23,48 @@ public class ExchangeService {
     private ExternalApiService apiService;
     private CurrencyRepository currencyRepository;
     private CurrencyService currencyService;
+    private CacheManager cacheManager;
 
-    public ExchangeService(ExternalApiService apiService, CurrencyRepository currencyRepository, CurrencyService currencyService) {
+    public ExchangeService(ExternalApiService apiService, CurrencyRepository currencyRepository, CurrencyService currencyService, CacheManager cacheManager) {
         this.apiService = apiService;
         this.currencyRepository = currencyRepository;
         this.currencyService = currencyService;
+        this.cacheManager = cacheManager;
     }
 
     /**
-     * This method returns the exchange rate from a currency A to a currency B. To do so, it contacts the external API at
-     * the /latest endpoint.
+     * This method returns the exchange rate from a currency A to a currency B. It implements the @Cacheable annotation,
+     * meaning that it will first check the exchangeRate cache, which stores each individual exchange rate from a currency A to a
+     * currency B, to see if the value is already stored. If it isn't, it contacts the external API at the /latest endpoint.
      * @param fromCode - the code for Currency A
      * @param toCode - the code for Currency B
      * @return a Map<String, Double> containing the exchange rate
      * @throws InvalidCurrencyException - if either of the currency codes passed as parameters by the user is not supported
      * by the API, throws this exception with the HTTP Status BAD REQUEST
      */
-    public Map<String, Double> getExchangeRateForSpecificCurrency(String fromCode, String toCode) throws InvalidCurrencyException, ExternalApiConnectionError {
+    @Cacheable(value = "exchangeRate", key = "#fromCode + '_' + #toCode")
+    public Double getExchangeRateForSpecificCurrency(String fromCode, String toCode) throws InvalidCurrencyException, ExternalApiConnectionError {
         // Verifying if the passed currencies are supported by the service
         if (!this.checkIfCurrencyExists(fromCode) || !this.checkIfCurrencyExists(toCode)) {
             LOGGER.info("One of the passed currencies is not supported by the service!");
             throw new InvalidCurrencyException("Invalid currency code(s) provided!");
         }
 
-        Map<String, Double> exchangeRates = new HashMap<>();
-
         // Fetching from external API
         LOGGER.info("Fetching from external API the exchange rates from {} to {}", fromCode.replaceAll(INPUT_REGEX, "_"), toCode.replaceAll(INPUT_REGEX, "_"));
         JsonObject rates = apiService.getLatestExchanges(fromCode, Optional.of(toCode)).getAsJsonObject();
 
-        exchangeRates.put(toCode, rates.get(toCode).getAsDouble());
         LOGGER.info("Finalizing processing the call to /exchange/{from} endpoint with parameters: from - {}; to - {}", fromCode.replaceAll(INPUT_REGEX, "_"), toCode.replaceAll(INPUT_REGEX,"_"));
-        return exchangeRates;
+        return rates.get(toCode).getAsDouble();
     }
 
 
     /**
-     * This method returns all the exchange rates for a given currency. To do so, it contacts the external API at the
-     * /latest endpoint, using the currency as the base parameter, via the ExternalApiService.
+     * This method returns all the exchange rates for a given currency. To do so, it will first check, for each supported currency,
+     * if the exchange rate is currently stored in the exchangeRate cache. If it is, that will be the rate returned for the specific currency.
+     * In case there is a currency not stored in the cache, the external API will be contacted at the /latest endpoint,
+     * using the currency as the base parameter, and the concatenated symbols of the uncached currencies as the symbols parameter,
+     * via the ExternalApiService.
      * @param code - the code of the currency to be fetched
      * @return a Map<String, Double> containing the exchange rate for each supported currency (with their code being
      * the key of the map)
@@ -71,16 +78,53 @@ public class ExchangeService {
         }
 
         Map<String, Double> exchangeRates = new HashMap<>();
+        StringBuilder symbolsBuilder = new StringBuilder();                 // Will store symbols of currencies to be fetched from External API
+        String symbols;                                                     // Will store the result of the StringBuilder
+        Cache exchangeRateCache = cacheManager.getCache("exchangeRate");
+
+        /* Looping the list of supported Currencies, to check for each one if they are stored in the Cache or if
+        the external API needs to be contacted */
+        currencyRepository.findAll().forEach(supportedCurrency -> {
+            // Create the cache key for current Currency
+            String supportedCurrencyCode = supportedCurrency.getCode();
+            String cacheKey = code + "_" + supportedCurrencyCode;
+
+            // Try to fetch from the cache
+            Cache.ValueWrapper cachedValue = exchangeRateCache.get(cacheKey);
+            if(cachedValue == null){
+                // Not in cache - needs to be fetched from the External API
+                LOGGER.info("The exchange rate for {} is not in the cache", supportedCurrencyCode);
+                symbolsBuilder.append(supportedCurrencyCode).append(",");
+            }else{
+                LOGGER.info("The exchange rate for {} is fetched from the cache", supportedCurrencyCode);
+                exchangeRates.put(supportedCurrencyCode, (Double) cachedValue.get());
+            }
+        });
+
+        // In case there is the need for it, contact the external API to retrieve new exchange rates
+        if(!symbolsBuilder.isEmpty()){
+            // There are currencies not present in the cache
+            symbols = symbolsBuilder.toString();
+        }else{
+            LOGGER.info("No need to fetch exchange rates from external API");
+            return exchangeRates;
+        }
 
         // Fetching from external API
-        LOGGER.info("Fetching from external API the exchange rates from {}", code.replaceAll(INPUT_REGEX, "_"));
-        JsonObject rates = apiService.getLatestExchanges(code, Optional.empty()).getAsJsonObject();
+        LOGGER.info("Fetching from external API the required exchange rates from {}", code.replaceAll(INPUT_REGEX, "_"));
+        JsonObject rates = apiService.getLatestExchanges(code, Optional.of(symbols)).getAsJsonObject();
 
         for(String key: rates.keySet()){
             Optional<Currency> exchangedCurrency = currencyRepository.findByCode(key);
 
             if(exchangedCurrency.isPresent()){
-                exchangeRates.put(exchangedCurrency.get().getCode(), rates.get(key).getAsDouble());
+                String exchangedCurrencyCode = exchangedCurrency.get().getCode();
+                Double exchangeValue = rates.get(key).getAsDouble();
+
+                exchangeRates.put(exchangedCurrencyCode, exchangeValue);
+
+                // Saving the new value in the cache
+                exchangeRateCache.put(code + "_" + exchangedCurrencyCode, exchangeValue);
             }else{
                 // A fetched currency isn't in the list of supported values. This means the list of supported symbols by the external
                 // API has been updated since application startup, or that they have conversion rates for a symbol not present
