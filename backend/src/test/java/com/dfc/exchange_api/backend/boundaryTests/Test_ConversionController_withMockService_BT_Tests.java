@@ -95,10 +95,7 @@ class Test_ConversionController_withMockService_BT_Tests {
 
     @Test
     void whenGettingConversionForSpecificCurrency_withValidInput_thenReturnOK() throws Exception {
-        Map<String, Double> returnedExchanges = new HashMap<>();
-        returnedExchanges.put("USD", 54.4212);
-
-        when(conversionService.getConversionForSpecificCurrency("EUR", "USD", 50.0)).thenReturn(returnedExchanges);
+        when(conversionService.getConversionForSpecificCurrency("EUR", "USD", 50.0)).thenReturn(54.4212);
 
         mockMvc.perform(
                         get("/api/v1/convert/EUR")
