@@ -126,7 +126,9 @@ public class ExchangeService {
                 exchangeRates.put(exchangedCurrencyCode, exchangeValue);
 
                 // Saving the new value in the cache
-                exchangeRateCache.put(fromCode + "_" + exchangedCurrencyCode, exchangeValue);
+                if(exchangeRateCache != null){
+                    exchangeRateCache.put(fromCode + "_" + exchangedCurrencyCode, exchangeValue);
+                }
             }else{
                 // A fetched currency isn't in the list of supported values. This means the list of supported symbols by the external
                 // API has been updated since application startup, or that they have conversion rates for a symbol not present

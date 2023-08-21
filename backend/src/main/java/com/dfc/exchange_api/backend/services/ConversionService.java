@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -54,14 +53,20 @@ public class ConversionService {
 
         // Checking if exchange rate is in the Cache
         double exchangeRate;
+        Cache.ValueWrapper cachedValue;
 
         Cache exchangeRateCache = cacheManager.getCache("exchangeRate");
         String cacheKey = fromCode + "_" + toCode;
-        Cache.ValueWrapper cachedValue = exchangeRateCache.get(cacheKey);
+
+        if(exchangeRateCache != null){
+            cachedValue = exchangeRateCache.get(cacheKey);
+        }else{
+            cachedValue = null;
+        }
 
         if(cachedValue == null){
             // Not in cache - needs to be fetched from the External API
-            LOGGER.info("The exchange rate for {} is not in the cache", toCode);
+            LOGGER.info("The exchange rate for {} is not in the cache", toCode.replaceAll(INPUT_REGEX, "_"));
 
             LOGGER.info("Fetching from external API the exchange rates from {} to {}", fromCode.replaceAll(INPUT_REGEX, "_"), toCode.replaceAll(INPUT_REGEX, "_"));
             JsonObject rates = apiService.getLatestExchanges(fromCode, Optional.of(toCode)).getAsJsonObject();
@@ -72,7 +77,7 @@ public class ConversionService {
             exchangeRateCache.put(fromCode + "_" + toCode, exchangeRate);
 
         }else{
-            LOGGER.info("The exchange rate for {} is fetched from the cache", toCode);
+            LOGGER.info("The exchange rate for {} is fetched from the cache", toCode.replaceAll(INPUT_REGEX, "_"));
             exchangeRate = (double) cachedValue.get();
         }
 
@@ -161,7 +166,9 @@ public class ConversionService {
                 conversionValue.put(exchangedCurrencyCode, exchangeValue*amount);
 
                 // Saving the new exchange rate in the cache
-                exchangeRateCache.put(fromCode + "_" + exchangedCurrencyCode, exchangeValue);
+                if(exchangeRateCache != null){
+                    exchangeRateCache.put(fromCode + "_" + exchangedCurrencyCode, exchangeValue);
+                }
             }else{
                 // A fetched currency isn't in the list of supported values. This means the list of supported symbols by the external
                 // API has been updated since application startup, or that they have conversion rates for a symbol not present

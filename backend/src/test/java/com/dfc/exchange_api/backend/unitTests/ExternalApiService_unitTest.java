@@ -130,7 +130,7 @@ class ExternalApiService_unitTest {
         // Verify the result is as expected
         assertThatThrownBy(() -> externalApiService.getLatestExchanges("EUR", Optional.empty())).isInstanceOf(ExternalApiConnectionError.class);
     }
-    
+
     @Test
     void whenGetAvailableCurrencies_returnsSuccess() {
         // Set up Expectations
