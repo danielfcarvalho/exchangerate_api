@@ -74,8 +74,9 @@ public class ConversionService {
             exchangeRate = rates.get(toCode).getAsDouble();
 
             // Saving the new value in the cache
-            exchangeRateCache.put(fromCode + "_" + toCode, exchangeRate);
-
+            if(exchangeRateCache != null){
+                exchangeRateCache.put(fromCode + "_" + toCode, exchangeRate);
+            }
         }else{
             LOGGER.info("The exchange rate for {} is fetched from the cache", toCode.replaceAll(INPUT_REGEX, "_"));
             exchangeRate = (double) cachedValue.get();
