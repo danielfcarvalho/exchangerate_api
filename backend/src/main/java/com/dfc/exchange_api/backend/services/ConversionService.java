@@ -17,16 +17,14 @@ import java.util.*;
 public class ConversionService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConversionService.class);
     private static final String INPUT_REGEX = "[\n\r]";
-    private ExternalApiService apiService;
     private CurrencyRepository currencyRepository;
     private CurrencyService currencyService;
-    private CacheManager cacheManager;
+    private ExchangeService exchangeService;
 
-    public ConversionService(ExternalApiService apiService, CurrencyRepository currencyRepository, CurrencyService currencyService, CacheManager cacheManager) {
-        this.apiService = apiService;
+    public ConversionService(CurrencyRepository currencyRepository, CurrencyService currencyService, ExchangeService exchangeService) {
         this.currencyRepository = currencyRepository;
         this.currencyService = currencyService;
-        this.cacheManager = cacheManager;
+        this.exchangeService = exchangeService;
     }
 
     /**
@@ -52,34 +50,15 @@ public class ConversionService {
         }
 
         // Checking if exchange rate is in the Cache
-        double exchangeRate;
-        Cache.ValueWrapper cachedValue;
+        Double exchangeRate = exchangeService.getExchangeRateFromCache(fromCode, toCode);
 
-        Cache exchangeRateCache = cacheManager.getCache("exchangeRate");
-        String cacheKey = fromCode + "_" + toCode;
-
-        if(exchangeRateCache != null){
-            cachedValue = exchangeRateCache.get(cacheKey);
-        }else{
-            cachedValue = null;
-        }
-
-        if(cachedValue == null){
+        if(exchangeRate == null){
             // Not in cache - needs to be fetched from the External API
             LOGGER.info("The exchange rate for {} is not in the cache", toCode.replaceAll(INPUT_REGEX, "_"));
 
-            LOGGER.info("Fetching from external API the exchange rates from {} to {}", fromCode.replaceAll(INPUT_REGEX, "_"), toCode.replaceAll(INPUT_REGEX, "_"));
-            JsonObject rates = apiService.getLatestExchanges(fromCode, Optional.of(toCode)).getAsJsonObject();
-
-            exchangeRate = rates.get(toCode).getAsDouble();
-
-            // Saving the new value in the cache
-            if(exchangeRateCache != null){
-                exchangeRateCache.put(fromCode + "_" + toCode, exchangeRate);
-            }
+            exchangeRate = exchangeService.getExchangeRatesFromExternalAPI(fromCode, toCode).get(toCode);
         }else{
             LOGGER.info("The exchange rate for {} is fetched from the cache", toCode.replaceAll(INPUT_REGEX, "_"));
-            exchangeRate = (double) cachedValue.get();
         }
 
         // Calculating the conversion rates
@@ -120,27 +99,20 @@ public class ConversionService {
 
         // The currencies are verified
         Map<String, Double> conversionValue = new HashMap<>();
-        Cache exchangeRateCache = cacheManager.getCache("exchangeRate");
 
         StringBuilder symbolsBuilder = new StringBuilder();                 // Will store symbols of currencies to be fetched from External API
         String symbols;                                                     // Will store the result of the StringBuilder
 
         // Checking if the passed Currencies exchange rate is in the cache or not; If not, contacting the External API
         currencyToConvertCodes.forEach(supportedCurrency -> {
-            // Create the cache key for current Currency
-            String exchangeCacheKey = fromCode + "_" + supportedCurrency;
+            Double exchangeRate = exchangeService.getExchangeRateFromCache(fromCode, supportedCurrency);
 
-            // Try to fetch from the caches
-            Cache.ValueWrapper exchangedCachedValue = exchangeRateCache.get(exchangeCacheKey);
-
-            if (exchangedCachedValue == null) {
+            if (exchangeRate == null) {
                 // Not in exchange cage - exchange rate needs to be retrieved from External API
-                LOGGER.info("The conversion amount of {} for {} is not in the cache", amount, supportedCurrency);
                 symbolsBuilder.append(supportedCurrency).append(",");
             }else{
                 // ExchangeRate in ExchangeRate Cache
-                LOGGER.info("The exchange rate for {} is fetched from the cache", supportedCurrency);
-                conversionValue.put(supportedCurrency, ((double) exchangedCachedValue.get())*amount);
+                conversionValue.put(supportedCurrency, exchangeRate*amount);
             }
         });
 
@@ -154,30 +126,10 @@ public class ConversionService {
         }
 
         // Fetching from external API for any Currency not in Cache
-        LOGGER.info("Fetching from external API the required exchange rates from {} to {}", fromCode.replaceAll(INPUT_REGEX, "_"), symbols);
-        JsonObject rates = apiService.getLatestExchanges(fromCode, Optional.of(symbols)).getAsJsonObject();
+        Map<String, Double> fetchedExchangeRates = exchangeService.getExchangeRatesFromExternalAPI(fromCode, symbols);
 
-        for(String key: rates.keySet()){
-            Optional<Currency> exchangedCurrency = currencyRepository.findByCode(key);
-
-            if(exchangedCurrency.isPresent()){
-                String exchangedCurrencyCode = exchangedCurrency.get().getCode();
-                Double exchangeValue = rates.get(key).getAsDouble();
-
-                conversionValue.put(exchangedCurrencyCode, exchangeValue*amount);
-
-                // Saving the new exchange rate in the cache
-                if(exchangeRateCache != null){
-                    exchangeRateCache.put(fromCode + "_" + exchangedCurrencyCode, exchangeValue);
-                }
-            }else{
-                // A fetched currency isn't in the list of supported values. This means the list of supported symbols by the external
-                // API has been updated since application startup, or that they have conversion rates for a symbol not present
-                // in their /symbols endpoint. We should call the method to fetch currencies from the external API
-                LOGGER.info("Fetched currency with fromCode {} was not on the repository! Contacting the fetchSupportedCurrencies() service", key);
-                currencyService.fetchSupportedCurrencies();
-            }
-        }
+        fetchedExchangeRates.entrySet().forEach(entry -> entry.setValue(entry.getValue() * amount));
+        conversionValue.putAll(fetchedExchangeRates);
 
         LOGGER.info("Finalizing processing the call to /exchange/{currency}/all endpoint with parameters: fromCode - {}", fromCode);
         return conversionValue;
