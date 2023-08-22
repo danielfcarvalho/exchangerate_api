@@ -121,18 +121,23 @@ public class ExchangeService {
     public Double getExchangeRateFromCache(String fromCode, String toCode) {
         Cache exchangeRateCache = cacheManager.getCache("exchangeRate");
 
-        // Create the cache key
-        String cacheKey = fromCode + "_" + toCode;
+        if(exchangeRateCache != null){
+            // Create the cache key
+            String cacheKey = fromCode + "_" + toCode;
 
-        // Try to fetch from the cache
-        Cache.ValueWrapper cachedValue = Optional.ofNullable(exchangeRateCache.get(cacheKey)).orElse(null);
-        if(cachedValue == null){
-            // Not in cache - needs to be fetched from the External API
-            LOGGER.info("The exchange rate for {} is not in the cache", toCode.replaceAll(INPUT_REGEX, "_"));
-            return null;
+            // Try to fetch from the cache
+            Cache.ValueWrapper cachedValue = exchangeRateCache.get(cacheKey);
+            if(cachedValue == null){
+                // Not in cache - needs to be fetched from the External API
+                LOGGER.info("The exchange rate for {} is not in the cache", toCode.replaceAll(INPUT_REGEX, "_"));
+                return null;
+            }else{
+                LOGGER.info("The exchange rate for {} is fetched from the cache", toCode.replaceAll(INPUT_REGEX, "_"));
+                return (Double) cachedValue.get();
+            }
         }else{
-            LOGGER.info("The exchange rate for {} is fetched from the cache", toCode.replaceAll(INPUT_REGEX, "_"));
-            return (Double) cachedValue.get();
+            LOGGER.info("Cache not found");
+            return null;
         }
     }
 
