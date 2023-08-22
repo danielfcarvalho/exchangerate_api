@@ -55,7 +55,7 @@ public class CacheController {
         LOGGER.info("Received a request on the DELETE /cache/entries endpoint");
 
         cacheService.deleteAllCacheEntries();
-        return ResponseEntity.status(HttpStatus.OK).body("Cache cleared succesfully");
+        return ResponseEntity.status(HttpStatus.OK).body("Cache cleared successfully");
     }
 
     // CACHE STATISTICS ENDPOINTS
