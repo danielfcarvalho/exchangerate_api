@@ -281,14 +281,19 @@ class ExchangeService_unitTest {
         when(externalApiService.getLatestExchanges("EUR", Optional.of("USD"))).thenReturn(rates);
         when(currencyRepository.existsByCode("EUR")).thenReturn(true);
         when(currencyRepository.existsByCode("USD")).thenReturn(true);
+        when(currencyRepository.findByCode("USD")).thenReturn(Optional.of(dollar));
+
+        // Cache calls
+        when(cacheManager.getCache("exchangeRate")).thenReturn(exchangeRateCache);
 
         // Verify the result is as expected
         Double exchangeRate = exchangeService.getExchangeRateForSpecificCurrency("EUR", "USD");
 
         assertThat(exchangeRate).isEqualTo(1.088186);
 
-        // TODO: Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
+        // Method invocation verifications
         verify(externalApiService, times(1)).getLatestExchanges("EUR", Optional.of("USD"));
+        verify(exchangeRateCache, times(1)).put("EUR_USD", 1.088186);
     }
 
     @Test
@@ -303,7 +308,7 @@ class ExchangeService_unitTest {
                 .isInstanceOf(ExternalApiConnectionError.class)
                 .hasMessage("External API request failed");
 
-        // TODO: Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
+        // Method invocation verifications
         verify(externalApiService, times(1)).getLatestExchanges("EUR", Optional.of("USD"));
     }
 

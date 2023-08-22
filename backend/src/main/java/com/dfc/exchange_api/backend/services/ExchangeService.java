@@ -51,12 +51,9 @@ public class ExchangeService {
             throw new InvalidCurrencyException("Invalid currency code(s) provided!");
         }
 
-        // Fetching from external API
-        LOGGER.info("Fetching from external API the exchange rates from {} to {}", fromCode.replaceAll(INPUT_REGEX, "_"), toCode.replaceAll(INPUT_REGEX, "_"));
-        JsonObject rates = apiService.getLatestExchanges(fromCode, Optional.of(toCode)).getAsJsonObject();
-
+        // Fetching from external API (Not done if in Cache
         LOGGER.info("Finalizing processing the call to /exchange/{from} endpoint with parameters: from - {}; to - {}", fromCode.replaceAll(INPUT_REGEX, "_"), toCode.replaceAll(INPUT_REGEX,"_"));
-        return rates.get(toCode).getAsDouble();
+        return this.getExchangeRatesFromExternalAPI(fromCode, toCode).get(toCode);
     }
 
 
@@ -82,25 +79,20 @@ public class ExchangeService {
         Map<String, Double> exchangeRates = new HashMap<>();
         StringBuilder symbolsBuilder = new StringBuilder();                 // Will store symbols of currencies to be fetched from External API
         String symbols;                                                     // Will store the result of the StringBuilder
-        Cache exchangeRateCache = cacheManager.getCache("exchangeRate");
 
         /* Looping the list of supported Currencies, to check for each one if they are stored in the Cache or if
         the external API needs to be contacted */
-        currencyRepository.findAll().forEach(supportedCurrency -> {
-            // Create the cache key for current Currency
-            String supportedCurrencyCode = supportedCurrency.getCode();
-            String cacheKey = fromCode + "_" + supportedCurrencyCode;
+        currencyRepository.findAll().stream()
+                .map(Currency::getCode)
+                .forEach(supportedCurrency -> {
+                    Double supportedCurrencyRate = this.getExchangeRateFromCache(fromCode, supportedCurrency);
 
-            // Try to fetch from the cache
-            Cache.ValueWrapper cachedValue = exchangeRateCache.get(cacheKey);
-            if(cachedValue == null){
-                // Not in cache - needs to be fetched from the External API
-                LOGGER.info("The exchange rate for {} is not in the cache", supportedCurrencyCode);
-                symbolsBuilder.append(supportedCurrencyCode).append(",");
-            }else{
-                LOGGER.info("The exchange rate for {} is fetched from the cache", supportedCurrencyCode);
-                exchangeRates.put(supportedCurrencyCode, (Double) cachedValue.get());
-            }
+                    if(supportedCurrencyRate == null){
+                        // Not in cache - needs to be fetched from the External API
+                        symbolsBuilder.append(supportedCurrency).append(",");
+                    }else{
+                        exchangeRates.put(supportedCurrency, supportedCurrencyRate);
+                    }
         });
 
         // In case there is the need for it, contact the external API to retrieve new exchange rates
@@ -113,7 +105,50 @@ public class ExchangeService {
         }
 
         // Fetching from external API
+        exchangeRates.putAll(this.getExchangeRatesFromExternalAPI(fromCode, symbols));
+
+        LOGGER.info("Finalizing processing the call to /exchange/{from}/all endpoint with parameters: fromCode - {}", fromCode);
+        return exchangeRates;
+    }
+
+    /**
+     * Checks if the exchange rate from a Currency A to a Currency B is stored in the Cache. If it is, it will return this
+     * rate; otherwise, will return null.
+     * @param fromCode - the code of Currency A
+     * @param toCode - the code of Currency B
+     * @return the exchange rate stored in the cache; or null, in case there isn't any value in the cache
+     */
+    public Double getExchangeRateFromCache(String fromCode, String toCode) {
+        Cache exchangeRateCache = cacheManager.getCache("exchangeRate");
+
+        // Create the cache key
+        String cacheKey = fromCode + "_" + toCode;
+
+        // Try to fetch from the cache
+        Cache.ValueWrapper cachedValue = exchangeRateCache.get(cacheKey);
+        if(cachedValue == null){
+            // Not in cache - needs to be fetched from the External API
+            LOGGER.info("The exchange rate for {} is not in the cache", toCode);
+            return null;
+        }else{
+            LOGGER.info("The exchange rate for {} is fetched from the cache", toCode);
+            return (Double) cachedValue.get();
+        }
+    }
+
+    /**
+     * Fetches, from the external API, the exchange rates from a Currency A to any set of currencies provided on the
+     * symbols string.
+     * @param fromCode - The code of currency A
+     * @param symbols - A String containing the codes of all currencies form which the exchange rates from A will be fetched
+     *                from the external API. Each code is separated by a comma.
+     * @return A Map<String, Double>, in which the key is the code of a currency, and the value is it's exchange rate from A
+     */
+    public Map<String, Double> getExchangeRatesFromExternalAPI(String fromCode, String symbols){
         LOGGER.info("Fetching from external API the required exchange rates from {}", fromCode.replaceAll(INPUT_REGEX, "_"));
+
+        Map<String, Double> exchangeRates = new HashMap<>();
+        Cache exchangeRateCache = cacheManager.getCache("exchangeRate");
         JsonObject rates = apiService.getLatestExchanges(fromCode, Optional.of(symbols)).getAsJsonObject();
 
         for(String key: rates.keySet()){
@@ -138,7 +173,6 @@ public class ExchangeService {
             }
         }
 
-        LOGGER.info("Finalizing processing the call to /exchange/{from}/all endpoint with parameters: fromCode - {}", fromCode);
         return exchangeRates;
     }
 
