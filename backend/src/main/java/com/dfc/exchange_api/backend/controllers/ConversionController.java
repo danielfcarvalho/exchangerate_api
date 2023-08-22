@@ -23,7 +23,7 @@ import java.util.Map;
 @RequestMapping("/api/v1/convert")
 public class ConversionController {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConversionController.class);
-    public ConversionService conversionService;
+    private ConversionService conversionService;
 
     public ConversionController(ConversionService conversionService) {
         this.conversionService = conversionService;
