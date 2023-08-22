@@ -40,4 +40,11 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return buildResponseEntity(apiError);
     }
 
+    @ExceptionHandler(CacheNotFoundException.class)
+    protected ResponseEntity<Object> handleConstraintViolationException(CacheNotFoundException ex) {
+        ErrorDetails apiError = new ErrorDetails(HttpStatus.NOT_FOUND);
+        apiError.setMessage(ex.getMessage());
+        return buildResponseEntity(apiError);
+    }
+
 }
