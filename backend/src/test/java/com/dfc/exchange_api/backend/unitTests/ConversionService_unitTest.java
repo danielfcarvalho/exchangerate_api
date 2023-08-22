@@ -6,9 +6,7 @@ import com.dfc.exchange_api.backend.models.Currency;
 import com.dfc.exchange_api.backend.repositories.CurrencyRepository;
 import com.dfc.exchange_api.backend.services.ConversionService;
 import com.dfc.exchange_api.backend.services.CurrencyService;
-import com.dfc.exchange_api.backend.services.ExternalApiService;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
+import com.dfc.exchange_api.backend.services.ExchangeService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,9 +15,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,16 +29,12 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ConversionService_unitTest {
-    @Mock
-    ExternalApiService externalApiService;
     @Mock(lenient = true)
     CurrencyRepository currencyRepository;
     @Mock
     private CurrencyService currencyService;
     @Mock
-    private CacheManager cacheManager;
-    @Mock
-    private Cache exchangeRateCache;
+    private ExchangeService exchangeService;
 
     @InjectMocks
     ConversionService conversionService;
@@ -69,24 +63,9 @@ class ConversionService_unitTest {
     @Test
     void whenGettingConversionForAll_withValidInput_NotInCache_thenContactExternalAPI() {
         // Set up Expectations
-        String mockResponse = "{\n" +
-                "    \"motd\": {\n" +
-                "        \"msg\": \"If you or your company use this project or like what we doing, please consider backing us so we can continue maintaining and evolving this project.\",\n" +
-                "        \"url\": \"https://exchangerate.host/#/donate\"\n" +
-                "    },\n" +
-                "    \"success\": true,\n" +
-                "    \"historical\": true,\n" +
-                "    \"base\": \"EUR\",\n" +
-                "    \"date\": \"2023-08-17\",\n" +
-                "    \"rates\": {\n" +
-                "        \"AMD\": 422.228721,\n" +
-                "        \"USD\": 1.088186\n" +
-                "    }\n" +
-                "}";
-
-        JsonElement rates = JsonParser.parseString(mockResponse).getAsJsonObject().get("rates");
-
-        when(externalApiService.getLatestExchanges("EUR", Optional.of("AMD,USD,"))).thenReturn(rates);
+        Map<String, Double> exchangeRatesFromExternalApi = new HashMap<>();
+        exchangeRatesFromExternalApi.put("AMD", 422.228721);
+        exchangeRatesFromExternalApi.put("USD", 1.088186);
 
         // Repository calls
         when(currencyRepository.existsByCode("EUR")).thenReturn(true);
@@ -96,11 +75,11 @@ class ConversionService_unitTest {
         when(currencyRepository.findByCode("AMD")).thenReturn(Optional.of(dram));
         when(currencyRepository.findByCode("USD")).thenReturn(Optional.of(dollar));
 
-        // Cache calls
-        when(cacheManager.getCache("exchangeRate")).thenReturn(exchangeRateCache);
+        // Exchange Service calls
+        when(exchangeService.getExchangeRateFromCache("EUR", "AMD")).thenReturn(null);
+        when(exchangeService.getExchangeRateFromCache("EUR", "USD")).thenReturn(null);
 
-        when(exchangeRateCache.get("EUR_AMD")).thenReturn(null);
-        when(exchangeRateCache.get("EUR_USD")).thenReturn(null);
+        when(exchangeService.getExchangeRatesFromExternalAPI("EUR", "AMD,USD,")).thenReturn(exchangeRatesFromExternalApi);
 
         // Verify the result is as expected
         Map<String, Double> exchangeRate = conversionService.getConversionForVariousCurrencies("EUR", "AMD,USD", 50.0);
@@ -110,81 +89,25 @@ class ConversionService_unitTest {
                 .containsEntry("AMD",21111.43605);
 
         // Method invocation verifications
-        verify(externalApiService, times(1)).getLatestExchanges("EUR", Optional.of("AMD,USD,"));
-
         verify(currencyRepository, times(1)).existsByCode("EUR");
-        verify(currencyRepository, times(2)).findByCode(Mockito.any());
 
-        verify(exchangeRateCache, times(2)).get(Mockito.any());
-
-        verify(exchangeRateCache, times(1)).put("EUR_AMD", 422.228721);
-        verify(exchangeRateCache, times(1)).put("EUR_USD", 1.088186);
+        verify(exchangeService, times(1)).getExchangeRateFromCache("EUR", "AMD");
+        verify(exchangeService, times(1)).getExchangeRateFromCache("EUR", "USD");
+        verify(exchangeService, times(1)).getExchangeRatesFromExternalAPI("EUR", "AMD,USD,");
     }
 
     @Test
     void whenGettingConversionForAll_withValidInput_AllInExchangeCache_thenCalculateConversion() {
         // Set up Expectations
-        // Repository calls
-        when(currencyRepository.existsByCode("EUR")).thenReturn(true);
-        when(currencyRepository.existsByCode("AMD")).thenReturn(true);
-        when(currencyRepository.existsByCode("USD")).thenReturn(true);
-
-        // Cache Calls
-        when(cacheManager.getCache("exchangeRate")).thenReturn(exchangeRateCache);
-        Cache.ValueWrapper cachedValue = mock(Cache.ValueWrapper.class);
-        when(cachedValue.get()).thenReturn(422.228721);
-
-        when(exchangeRateCache.get("EUR_AMD")).thenReturn(cachedValue);
-        when(exchangeRateCache.get("EUR_USD")).thenReturn(cachedValue);
-
-        // Verify the result is as expected
-        Map<String, Double> exchangeRate = conversionService.getConversionForVariousCurrencies("EUR", "AMD,USD", 50.0);
-
-        assertThat(exchangeRate).containsOnlyKeys("AMD", "USD")
-                .containsEntry("USD",21111.43605)
-                .containsEntry("AMD",21111.43605);
-
-        // Method invocation verifications
-        verify(currencyRepository, times(3)).existsByCode(Mockito.any());
-
-        verify(exchangeRateCache, times(2)).get(Mockito.any());
-    }
-
-    @Test
-    void whenGettingConversionForAll_withValidInput_SomeInExchangeCache_thenCalculateConversion() {
-        // Set up Expectations
-        String mockResponse = "{\n" +
-                "    \"motd\": {\n" +
-                "        \"msg\": \"If you or your company use this project or like what we doing, please consider backing us so we can continue maintaining and evolving this project.\",\n" +
-                "        \"url\": \"https://exchangerate.host/#/donate\"\n" +
-                "    },\n" +
-                "    \"success\": true,\n" +
-                "    \"historical\": true,\n" +
-                "    \"base\": \"EUR\",\n" +
-                "    \"date\": \"2023-08-17\",\n" +
-                "    \"rates\": {\n" +
-                "        \"USD\": 1.088186\n" +
-                "    }\n" +
-                "}";
-
-        JsonElement rates = JsonParser.parseString(mockResponse).getAsJsonObject().get("rates");
-
-        when(externalApiService.getLatestExchanges("EUR", Optional.of("USD,"))).thenReturn(rates);
 
         // Repository calls
         when(currencyRepository.existsByCode("EUR")).thenReturn(true);
         when(currencyRepository.existsByCode("AMD")).thenReturn(true);
         when(currencyRepository.existsByCode("USD")).thenReturn(true);
-        when(currencyRepository.findByCode("AMD")).thenReturn(Optional.of(dram));
-        when(currencyRepository.findByCode("USD")).thenReturn(Optional.of(dollar));
 
-        // Cache Calls
-        when(cacheManager.getCache("exchangeRate")).thenReturn(exchangeRateCache);
-        Cache.ValueWrapper cachedValue = mock(Cache.ValueWrapper.class);
-        when(cachedValue.get()).thenReturn(422.228721);
-
-        when(exchangeRateCache.get("EUR_AMD")).thenReturn(cachedValue);
-        when(exchangeRateCache.get("EUR_USD")).thenReturn(null);
+        // Exchange Service calls
+        when(exchangeService.getExchangeRateFromCache("EUR", "AMD")).thenReturn(422.228721);
+        when(exchangeService.getExchangeRateFromCache("EUR", "USD")).thenReturn(1.088186);
 
         // Verify the result is as expected
         Map<String, Double> exchangeRate = conversionService.getConversionForVariousCurrencies("EUR", "AMD,USD", 50.0);
@@ -194,29 +117,62 @@ class ConversionService_unitTest {
                 .containsEntry("AMD",21111.43605);
 
         // Method invocation verifications
-        verify(externalApiService, times(1)).getLatestExchanges("EUR", Optional.of("USD,"));
-
         verify(currencyRepository, times(3)).existsByCode(Mockito.any());
-        verify(currencyRepository, times(1)).findByCode(Mockito.any());
+        verify(exchangeService, times(1)).getExchangeRateFromCache("EUR", "AMD");
+        verify(exchangeService, times(1)).getExchangeRateFromCache("EUR", "USD");
+    }
 
-        verify(exchangeRateCache, times(2)).get(Mockito.any());
-        verify(exchangeRateCache, times(1)).put("EUR_USD", 1.088186);
+    @Test
+    void whenGettingConversionForAll_withValidInput_SomeInExchangeCache_thenCalculateConversion() {
+        // Set up Expectations
+        Map<String, Double> exchangeRatesFromExternalApi = new HashMap<>();
+        exchangeRatesFromExternalApi.put("USD", 1.088186);
 
+        // Repository calls
+        when(currencyRepository.existsByCode("EUR")).thenReturn(true);
+        when(currencyRepository.existsByCode("AMD")).thenReturn(true);
+        when(currencyRepository.existsByCode("USD")).thenReturn(true);
+
+        when(currencyRepository.findByCode("AMD")).thenReturn(Optional.of(dram));
+        when(currencyRepository.findByCode("USD")).thenReturn(Optional.of(dollar));
+
+        // Exchange Service calls
+        when(exchangeService.getExchangeRateFromCache("EUR", "AMD")).thenReturn(422.228721);
+        when(exchangeService.getExchangeRateFromCache("EUR", "USD")).thenReturn(null);
+
+        when(exchangeService.getExchangeRatesFromExternalAPI("EUR", "USD,")).thenReturn(exchangeRatesFromExternalApi);
+
+        // Verify the result is as expected
+        Map<String, Double> exchangeRate = conversionService.getConversionForVariousCurrencies("EUR", "AMD,USD", 50.0);
+
+        assertThat(exchangeRate).containsOnlyKeys("AMD", "USD")
+                .containsEntry("USD",54.4093)
+                .containsEntry("AMD",21111.43605);
+
+        // Method invocation verifications
+        verify(currencyRepository, times(3)).existsByCode(Mockito.any());
+
+        verify(exchangeService, times(1)).getExchangeRateFromCache("EUR", "AMD");
+        verify(exchangeService, times(1)).getExchangeRateFromCache("EUR", "USD");
+        verify(exchangeService, times(1)).getExchangeRatesFromExternalAPI("EUR", "USD,");
     }
 
     @Test
     void whenGettingConversionForAll_withValidInput_NotInCache_externalAPIFailure_thenThrowException() {
         // Set up Expectations
+        // Repository calls
         when(currencyRepository.existsByCode("EUR")).thenReturn(true);
         when(currencyRepository.existsByCode("AMD")).thenReturn(true);
         when(currencyRepository.existsByCode("USD")).thenReturn(true);
-        when(externalApiService.getLatestExchanges("EUR", Optional.of("AMD,USD,"))).thenThrow(new ExternalApiConnectionError("External API request failed"));
 
-        // Cache calls
-        when(cacheManager.getCache("exchangeRate")).thenReturn(exchangeRateCache);
+        when(currencyRepository.findByCode("AMD")).thenReturn(Optional.of(dram));
+        when(currencyRepository.findByCode("USD")).thenReturn(Optional.of(dollar));
 
-        when(exchangeRateCache.get("EUR_AMD")).thenReturn(null);
-        when(exchangeRateCache.get("EUR_USD")).thenReturn(null);
+        // Exchange Service calls
+        when(exchangeService.getExchangeRateFromCache("EUR", "AMD")).thenReturn(null);
+        when(exchangeService.getExchangeRateFromCache("EUR", "USD")).thenReturn(null);
+
+        when(exchangeService.getExchangeRatesFromExternalAPI("EUR", "AMD,USD,")).thenThrow(new ExternalApiConnectionError("External API request failed"));
 
         // Verify the result is as expected
         assertThatThrownBy(() -> conversionService.getConversionForVariousCurrencies("EUR", "AMD,USD", 50.0))
@@ -224,9 +180,9 @@ class ConversionService_unitTest {
                 .hasMessage("External API request failed");
 
         // Method invocation verifications
-        verify(externalApiService, times(1)).getLatestExchanges("EUR", Optional.of("AMD,USD,"));
-
-        verify(exchangeRateCache, times(2)).get(Mockito.any());
+        verify(exchangeService, times(1)).getExchangeRateFromCache("EUR", "AMD");
+        verify(exchangeService, times(1)).getExchangeRateFromCache("EUR", "USD");
+        verify(exchangeService, times(1)).getExchangeRatesFromExternalAPI("EUR", "AMD,USD,");
     }
 
     @Test
@@ -262,31 +218,19 @@ class ConversionService_unitTest {
     @Test
     void whenGettingConversionForSpecificCurrency_withValidInput_NotInCache_thenContactExternalAPI() {
         // Set up Expectations
-        String mockResponse = "{\n" +
-                "    \"motd\": {\n" +
-                "        \"msg\": \"If you or your company use this project or like what we doing, please consider backing us so we can continue maintaining and evolving this project.\",\n" +
-                "        \"url\": \"https://exchangerate.host/#/donate\"\n" +
-                "    },\n" +
-                "    \"success\": true,\n" +
-                "    \"historical\": true,\n" +
-                "    \"base\": \"EUR\",\n" +
-                "    \"date\": \"2023-08-17\",\n" +
-                "    \"rates\": {\n" +
-                "        \"USD\": \"1.088186\"\n" +
-                "    }\n" +
-                "}";
+        Map<String, Double> exchangeRatesFromExternalApi = new HashMap<>();
+        exchangeRatesFromExternalApi.put("USD", 1.088186);
 
-        JsonElement rates = JsonParser.parseString(mockResponse).getAsJsonObject().get("rates");
-
-        when(externalApiService.getLatestExchanges("EUR", Optional.of("USD"))).thenReturn(rates);
-
-        // Cache calls
-        when(cacheManager.getCache("exchangeRate")).thenReturn(exchangeRateCache);
-        when(exchangeRateCache.get("EUR_USD")).thenReturn(null);
-
-        // Repository Calls
+        // Repository calls
         when(currencyRepository.existsByCode("EUR")).thenReturn(true);
         when(currencyRepository.existsByCode("USD")).thenReturn(true);
+
+        when(currencyRepository.findByCode("USD")).thenReturn(Optional.of(dollar));
+
+        // Exchange Service calls
+        when(exchangeService.getExchangeRateFromCache("EUR", "USD")).thenReturn(null);
+
+        when(exchangeService.getExchangeRatesFromExternalAPI("EUR", "USD")).thenReturn(exchangeRatesFromExternalApi);
 
         // Verify the result is as expected
         Double conversionValue = conversionService.getConversionForSpecificCurrency("EUR", "USD", 50.0);
@@ -294,23 +238,22 @@ class ConversionService_unitTest {
         assertThat(conversionValue).isEqualTo(54.4093);
 
         // Method invocation verifications
-        verify(externalApiService, times(1)).getLatestExchanges("EUR", Optional.of("USD"));
-
-        verify(exchangeRateCache, times(1)).get(Mockito.any());
-        verify(exchangeRateCache, times(1)).put("EUR_USD", 1.088186);
+        verify(exchangeService, times(1)).getExchangeRateFromCache("EUR", "USD");
+        verify(exchangeService, times(1)).getExchangeRatesFromExternalAPI("EUR", "USD");
     }
 
     @Test
     void whenGettingConversionForSpecificCurrency_withValidInput_InExchangeCache_thenCalculateConversion() {
-        // Cache calls
-        when(cacheManager.getCache("exchangeRate")).thenReturn(exchangeRateCache);
-        Cache.ValueWrapper cachedValue = mock(Cache.ValueWrapper.class);
-        when(cachedValue.get()).thenReturn(1.088186);
-        when(exchangeRateCache.get("EUR_USD")).thenReturn(cachedValue);
+        // Set up Expectations
 
-        // Repository Calls
+        // Repository calls
         when(currencyRepository.existsByCode("EUR")).thenReturn(true);
         when(currencyRepository.existsByCode("USD")).thenReturn(true);
+
+        when(currencyRepository.findByCode("USD")).thenReturn(Optional.of(dollar));
+
+        // Exchange Service calls
+        when(exchangeService.getExchangeRateFromCache("EUR", "USD")).thenReturn(1.088186);
 
         // Verify the result is as expected
         Double conversionValue = conversionService.getConversionForSpecificCurrency("EUR", "USD", 50.0);
@@ -318,19 +261,22 @@ class ConversionService_unitTest {
         assertThat(conversionValue).isEqualTo(54.4093);
 
         // Method invocation verifications
-        verify(exchangeRateCache, times(1)).get(Mockito.any());
+        verify(exchangeService, times(1)).getExchangeRateFromCache("EUR", "USD");
     }
 
     @Test
     void whenGettingConversionForSpecificCurrency_withValidInput_NotInCache_externalAPIFailure_thenThrowException() {
         // Set up Expectations
+        // Repository calls
         when(currencyRepository.existsByCode("EUR")).thenReturn(true);
         when(currencyRepository.existsByCode("USD")).thenReturn(true);
-        when(externalApiService.getLatestExchanges("EUR", Optional.of("USD"))).thenThrow(new ExternalApiConnectionError("External API request failed"));
 
-        // Cache calls
-        when(cacheManager.getCache("exchangeRate")).thenReturn(exchangeRateCache);
-        when(exchangeRateCache.get("EUR_USD")).thenReturn(null);
+        when(currencyRepository.findByCode("USD")).thenReturn(Optional.of(dollar));
+
+        // Exchange Service calls
+        when(exchangeService.getExchangeRateFromCache("EUR", "USD")).thenReturn(null);
+
+        when(exchangeService.getExchangeRatesFromExternalAPI("EUR", "USD")).thenThrow(new ExternalApiConnectionError("External API request failed"));
 
         // Verify the result is as expected
         assertThatThrownBy(() -> conversionService.getConversionForSpecificCurrency("EUR", "USD", 50.0))
@@ -338,9 +284,8 @@ class ConversionService_unitTest {
                 .hasMessage("External API request failed");
 
         // Method invocation verifications
-        verify(externalApiService, times(1)).getLatestExchanges("EUR", Optional.of("USD"));
-
-        verify(exchangeRateCache, times(1)).get(Mockito.any());
+        verify(exchangeService, times(1)).getExchangeRateFromCache("EUR", "USD");
+        verify(exchangeService, times(1)).getExchangeRatesFromExternalAPI("EUR", "USD");
     }
 
     @Test
