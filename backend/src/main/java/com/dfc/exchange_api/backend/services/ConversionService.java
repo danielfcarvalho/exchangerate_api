@@ -2,13 +2,9 @@ package com.dfc.exchange_api.backend.services;
 
 import com.dfc.exchange_api.backend.exceptions.ExternalApiConnectionError;
 import com.dfc.exchange_api.backend.exceptions.InvalidCurrencyException;
-import com.dfc.exchange_api.backend.models.Currency;
 import com.dfc.exchange_api.backend.repositories.CurrencyRepository;
-import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import java.util.*;

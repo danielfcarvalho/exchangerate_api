@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-@Tag(name = "Exchange Controller", description = "Endpoints to determine the exchange rate from a given currency")
+@Tag(name = "1. Exchange Controller", description = "Endpoints to determine the exchange rate from a given currency")
 @RestController
 @RequestMapping("/api/v1/exchange")
 public class ExchangeController {
@@ -44,13 +44,13 @@ public class ExchangeController {
                     content = @Content),
             @ApiResponse(responseCode = "402", description = "Error connecting to external API",
                     content = @Content),})
-    @Operation(summary = "Get the exchange rates from a currency A to a currency B")
+    @Operation(summary = "Get the exchange rates from currency A to a currency B")
     @GetMapping("/{from}")
     public ResponseEntity<Map<String, Double>> getExchangeRateForSpecificCurrency(
             @PathVariable(name = "from") String from,
             @RequestParam(name = "to") String to)
             throws InvalidCurrencyException, ExternalApiConnectionError {
-        LOGGER.info("Received a request on the /exchange/{currency} endpoint");
+        LOGGER.info("Received a request on the GET /exchange/{currency} endpoint");
 
         return ResponseEntity.ok().body(Map.of(to, exchangeService.getExchangeRateForSpecificCurrency(from, to)));
     }
@@ -77,7 +77,7 @@ public class ExchangeController {
     public ResponseEntity<Map<String, Double>> getExchangeRateForAll(
             @PathVariable(name = "from") String code)
             throws InvalidCurrencyException, ExternalApiConnectionError{
-        LOGGER.info("Received a request on the /exchange/{currency}/all endpoint");
+        LOGGER.info("Received a request on the GET /exchange/{currency}/all endpoint");
 
         return ResponseEntity.ok().body(exchangeService.getExchangeRateForAll(code));
     }

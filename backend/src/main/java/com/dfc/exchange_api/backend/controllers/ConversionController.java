@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-@Tag(name = "Conversion Controller", description = "Endpoints to convert amounts from a supplied currency")
+@Tag(name = "2. Conversion Controller", description = "Endpoints to convert amounts from a supplied currency")
 @RestController
 @Validated
 @RequestMapping("/api/v1/convert")
@@ -48,14 +48,14 @@ public class ConversionController {
                     content = @Content),
             @ApiResponse(responseCode = "402", description = "Error connecting to external API",
                     content = @Content),})
-    @Operation(summary = "Get the conversion of a specified amount from a currency A to a currency B")
+    @Operation(summary = "Get the conversion of a specified amount from currency A to a currency B")
     @GetMapping("/{from}")
     public ResponseEntity<Map<String, Double>> getConversionForSpecificCurrency(
             @PathVariable(name = "from") String from,
             @RequestParam(name = "to") String to,
             @RequestParam(name = "amount") @PositiveOrZero(message = "Amount must be non-negative!") Double amount)
             throws InvalidCurrencyException, ExternalApiConnectionError {
-        LOGGER.info("Received a request on the /convert/{from} endpoint");
+        LOGGER.info("Received a request on the GET /convert/{from} endpoint");
 
         return ResponseEntity.ok().body(Map.of(to, conversionService.getConversionForSpecificCurrency(from, to, amount)));
     }
@@ -80,14 +80,14 @@ public class ConversionController {
                     content = @Content),
             @ApiResponse(responseCode = "402", description = "Error connecting to external API",
                     content = @Content),})
-    @Operation(summary = "Get the conversion of a specified amount from a Currency A to a list of supplied currencies")
+    @Operation(summary = "Get the conversion of a specified amount from Currency A to a list of supplied currencies")
     @GetMapping("/{from}/various")
     public ResponseEntity<Map<String, Double>> getConversionForAll(
             @PathVariable(name = "from") String from,
             @RequestParam(name = "to") String to,
             @RequestParam(name = "amount") @PositiveOrZero(message = "Amount must be non-negative!")  Double amount)
             throws InvalidCurrencyException, ExternalApiConnectionError{
-        LOGGER.info("Received a request on the /convert/{from}/various endpoint");
+        LOGGER.info("Received a request on the GET /convert/{from}/various endpoint");
 
         return ResponseEntity.ok().body(conversionService.getConversionForVariousCurrencies(from, to, amount));
     }
