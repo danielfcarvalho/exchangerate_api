@@ -130,7 +130,7 @@ class CacheService_unitTest {
         when(exchangeRateCache.get("EUR_AMD")).thenReturn(null);
 
         // Verify the result is as expected
-        assertThat(cacheService.getSingleValue("EUR_AMD")).isEqualTo(null);
+        assertThat(cacheService.getSingleValue("EUR_AMD")).isNull();
 
         // Method invocation verifications
         verify(exchangeRateCache, times(1)).get(Mockito.any());

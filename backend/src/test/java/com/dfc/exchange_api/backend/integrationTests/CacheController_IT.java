@@ -16,7 +16,7 @@ import static org.hamcrest.Matchers.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestDatabase
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class CacheController_IT {
+class CacheController_IT {
     private final static String BASE_URL = "http://localhost:";
 
     @Autowired

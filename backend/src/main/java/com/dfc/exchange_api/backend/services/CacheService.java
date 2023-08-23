@@ -17,6 +17,7 @@ import java.util.Map;
 public class CacheService {
     private static final Logger LOGGER = LoggerFactory.getLogger(CacheService.class);
     private static final String INPUT_REGEX = "[\n\r]";
+    private static final String CACHE_NAME = "exchangeRate";
     private CacheManager cacheManager;
 
     public CacheService(CacheManager cacheManager) {
@@ -32,16 +33,14 @@ public class CacheService {
      */
     public Object getAllCacheEntries() throws CacheNotFoundException {
         LOGGER.info("Searching for all cache entries");
-        CaffeineCache caffeineCache = (CaffeineCache) cacheManager.getCache("exchangeRate");
+        CaffeineCache caffeineCache = (CaffeineCache) cacheManager.getCache(CACHE_NAME);
 
         if(caffeineCache != null){
             LOGGER.info("Cache entries found");
             Map<Object, Object> cacheEntries = new HashMap<>();
 
             com.github.benmanes.caffeine.cache.Cache<Object, Object> nativeCache = caffeineCache.getNativeCache();
-            nativeCache.asMap().forEach((key, value) -> {
-                cacheEntries.put(key, value);
-            });
+            nativeCache.asMap().forEach(cacheEntries::put);
 
             return cacheEntries;
         }
@@ -57,13 +56,13 @@ public class CacheService {
      */
     public Object getAllCacheKeys() throws CacheNotFoundException {
         LOGGER.info("Searching for all cache entries");
-        CaffeineCache caffeineCache = (CaffeineCache) cacheManager.getCache("exchangeRate");
+        CaffeineCache caffeineCache = (CaffeineCache) cacheManager.getCache(CACHE_NAME);
 
         if(caffeineCache != null){
             LOGGER.info("Cache entries found");
-            Map<Object, Object> cacheEntries = new HashMap<>();
 
             com.github.benmanes.caffeine.cache.Cache<Object, Object> nativeCache = caffeineCache.getNativeCache();
+
             return nativeCache.asMap().keySet();
         }
 
@@ -77,7 +76,7 @@ public class CacheService {
      * @return either the correpsonding value, or null, if the key is not stored in the cache
      */
     public Object getSingleValue(@PathVariable(name = "key") String key) throws CacheNotFoundException {
-        Cache cache = cacheManager.getCache("exchangeRate");
+        Cache cache = cacheManager.getCache(CACHE_NAME);
 
         if (cache != null) {
             Cache.ValueWrapper value = cache.get(key);
@@ -100,7 +99,7 @@ public class CacheService {
      */
     public void deleteAllCacheEntries() throws CacheNotFoundException {
         LOGGER.info("Searching for cache");
-        Cache cache = cacheManager.getCache("exchangeRate");
+        Cache cache = cacheManager.getCache(CACHE_NAME);
 
         if(cache != null){
             LOGGER.info("Cleared the cache successfully");
@@ -121,7 +120,7 @@ public class CacheService {
      */
     public Map<String, Object> getAllStatistics() throws CacheNotFoundException {
         LOGGER.info("Searching for cache");
-        CaffeineCache caffeineCache = (CaffeineCache) cacheManager.getCache("exchangeRate");
+        CaffeineCache caffeineCache = (CaffeineCache) cacheManager.getCache(CACHE_NAME);
 
         if (caffeineCache != null) {
             Map<String, Object> cacheStats = new HashMap<>();

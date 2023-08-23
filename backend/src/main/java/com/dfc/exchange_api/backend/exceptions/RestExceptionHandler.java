@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.time.LocalDateTime;
+
 /**
  * Exception Handler for the Custom Exceptions Created in this REST API.
  */
@@ -23,6 +25,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleIncorrectParameter(ExternalApiConnectionError ex){
         ErrorDetails apiError = new ErrorDetails(HttpStatus.BAD_GATEWAY);
         apiError.setMessage(ex.getMessage());
+        apiError.setTimestamp(LocalDateTime.now());
         return buildResponseEntity(apiError);
     }
 
@@ -30,6 +33,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleIncorrectParameter(InvalidCurrencyException ex){
         ErrorDetails apiError = new ErrorDetails(HttpStatus.BAD_REQUEST);
         apiError.setMessage(ex.getMessage());
+        apiError.setTimestamp(LocalDateTime.now());
         return buildResponseEntity(apiError);
     }
 
@@ -37,6 +41,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleConstraintViolationException(ConstraintViolationException ex) {
         ErrorDetails apiError = new ErrorDetails(HttpStatus.BAD_REQUEST);
         apiError.setMessage(ex.getMessage());
+        apiError.setTimestamp(LocalDateTime.now());
         return buildResponseEntity(apiError);
     }
 
@@ -44,6 +49,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleConstraintViolationException(CacheNotFoundException ex) {
         ErrorDetails apiError = new ErrorDetails(HttpStatus.NOT_FOUND);
         apiError.setMessage(ex.getMessage());
+        apiError.setTimestamp(LocalDateTime.now());
         return buildResponseEntity(apiError);
     }
 

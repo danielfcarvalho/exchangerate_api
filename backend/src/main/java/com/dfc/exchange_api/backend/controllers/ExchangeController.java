@@ -52,11 +52,11 @@ public class ExchangeController {
             throws InvalidCurrencyException, ExternalApiConnectionError {
         LOGGER.info("Received a request on the GET /exchange/{currency} endpoint");
 
-        return ResponseEntity.ok().body(Map.of(to, exchangeService.getExchangeRateForSpecificCurrency(from, to)));
+        return ResponseEntity.ok().body(Map.of(to, exchangeService.getExchangeRateForSpecificCurrency(from.toUpperCase(), to.toUpperCase())));
     }
 
     /**
-     * This endpoint is used to fetch the exchange rate from a currency A to all of the supported currencies.
+     * This endpoint is used to fetch the exchange rate from a currency A to all the supported currencies.
      * @param code - the code of currency A
      * @return A response entity containing a Map with the value of the conversion rate for each supported currency, and
      * with HTTP status code OK.
@@ -79,6 +79,6 @@ public class ExchangeController {
             throws InvalidCurrencyException, ExternalApiConnectionError{
         LOGGER.info("Received a request on the GET /exchange/{currency}/all endpoint");
 
-        return ResponseEntity.ok().body(exchangeService.getExchangeRateForAll(code));
+        return ResponseEntity.ok().body(exchangeService.getExchangeRateForAll(code.toUpperCase()));
     }
 }
