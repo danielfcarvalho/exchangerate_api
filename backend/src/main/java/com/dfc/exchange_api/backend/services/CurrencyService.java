@@ -79,4 +79,13 @@ public class CurrencyService {
                 LOGGER.info("Could not connext to External API");
             }
     }
+
+    /**
+     * Method used to get all of the currencies supported by this API, called by the REST endpoint associated with this
+     * call.
+     * @return the list of supported currencies
+     */
+    public List<Currency> getSupportedCurrencies(){
+        return currencyRepository.findAll();
+    }
 }
