@@ -15,11 +15,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -55,6 +53,7 @@ class CurrencyService_unitTest {
         dirham = null;
         afghani = null;
         lek = null;
+        euro = null;
     }
 
     @Test
@@ -178,6 +177,30 @@ class CurrencyService_unitTest {
         // Verify that the repository's saveAll method was never called, and that the delete method was called for no longer supported "EUR"
         verify(currencyRepository, never()).saveAll(anyList());
         verify(currencyRepository).deleteAll(List.of(euro));
+    }
 
+    @Test
+    void getSupportedCurrencies_withRepositoryEmpty(){
+        // Setting up Expectations
+        when(currencyRepository.findAll()).thenReturn(Collections.emptyList());
+
+        // Call the method under test
+        assertThat(currencyService.getSupportedCurrencies()).isEmpty();
+
+        // Verify that the repository's saveAll method was called
+        verify(currencyRepository).findAll();
+    }
+
+    @Test
+    void getSupportedCurrencies_withRepositoryFull(){
+        // Setting up Expectations
+        List<Currency> currenciesOnRepo = Arrays.asList(dirham, afghani, lek, euro);
+        when(currencyRepository.findAll()).thenReturn(currenciesOnRepo);
+
+        // Call the method under test
+        assertThat(currencyService.getSupportedCurrencies()).isEqualTo(currenciesOnRepo);
+
+        // Verify that the repository's saveAll method was called
+        verify(currencyRepository).findAll();
     }
 }
