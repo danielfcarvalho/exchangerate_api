@@ -58,7 +58,7 @@ public class ExchangeController {
             // Exchange Rate for a Specific Currency
             LOGGER.info("Request for a specific exchange rate");
 
-            return Map.of(to, exchangeService.getExchangeRateForSpecificCurrency(from.toUpperCase(), to.toUpperCase()));
+            return Map.of(to.toUpperCase(), exchangeService.getExchangeRateForSpecificCurrency(from.toUpperCase(), to.toUpperCase()));
         }else{
             // Exchange Rate for all Currencies
             LOGGER.info("Request for all exchange rates");
