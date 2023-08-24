@@ -37,7 +37,7 @@ class CacheService_unitTest {
     @Test
     void whenCacheEmpty_getAllEntries_returnEmpty(){
         // Set up Expectations
-        when(cacheManager.getCache("exchangeRate")).thenReturn(caffeineCache);
+        when(cacheManager.getCache(Mockito.any())).thenReturn(caffeineCache);
 
         com.github.benmanes.caffeine.cache.Cache nativeCache = mock(com.github.benmanes.caffeine.cache.Cache.class);
 
@@ -56,7 +56,7 @@ class CacheService_unitTest {
         concurrentMap.put("EUR_ANG", 1.965639);
         concurrentMap.put("EUR_USD", 1.088186);
 
-        when(cacheManager.getCache("exchangeRate")).thenReturn(caffeineCache);
+        when(cacheManager.getCache(Mockito.any())).thenReturn(caffeineCache);
 
         com.github.benmanes.caffeine.cache.Cache nativeCache = mock(com.github.benmanes.caffeine.cache.Cache.class);
 
@@ -70,7 +70,7 @@ class CacheService_unitTest {
     @Test
     void whenNoCache_getAllEntries_throwException(){
         // Set up Expectations
-        when(cacheManager.getCache("exchangeRate")).thenReturn(null);
+        when(cacheManager.getCache(Mockito.any())).thenReturn(null);
 
         // Verify the result is as expected
         assertThatThrownBy(() -> cacheService.getAllCacheEntries())
@@ -81,7 +81,7 @@ class CacheService_unitTest {
     @Test
     void whenCacheEmpty_getAllKeys_returnEmpty(){
         // Set up Expectations
-        when(cacheManager.getCache("exchangeRate")).thenReturn(caffeineCache);
+        when(cacheManager.getCache(Mockito.any())).thenReturn(caffeineCache);
 
         com.github.benmanes.caffeine.cache.Cache nativeCache = mock(com.github.benmanes.caffeine.cache.Cache.class);
 
@@ -100,7 +100,7 @@ class CacheService_unitTest {
         concurrentMap.put("EUR_ANG", 1.965639);
         concurrentMap.put("EUR_USD", 1.088186);
 
-        when(cacheManager.getCache("exchangeRate")).thenReturn(caffeineCache);
+        when(cacheManager.getCache(Mockito.any())).thenReturn(caffeineCache);
 
         com.github.benmanes.caffeine.cache.Cache nativeCache = mock(com.github.benmanes.caffeine.cache.Cache.class);
 
@@ -114,7 +114,7 @@ class CacheService_unitTest {
     @Test
     void whenNoCache_getAllKeys_throwException(){
         // Set up Expectations
-        when(cacheManager.getCache("exchangeRate")).thenReturn(null);
+        when(cacheManager.getCache(Mockito.any())).thenReturn(null);
 
         // Verify the result is as expected
         assertThatThrownBy(() -> cacheService.getAllCacheKeys())
@@ -125,7 +125,7 @@ class CacheService_unitTest {
     @Test
     void whenCacheEmpty_getSingleValue_returnEmpty(){
         // Set up Expectations
-        when(cacheManager.getCache("exchangeRate")).thenReturn(exchangeRateCache);
+        when(cacheManager.getCache(Mockito.any())).thenReturn(exchangeRateCache);
 
         when(exchangeRateCache.get("EUR_AMD")).thenReturn(null);
 
@@ -139,7 +139,7 @@ class CacheService_unitTest {
     @Test
     void whenCacheFull_getSingleValue_returnCorrect(){
         // Set up Expectations
-        when(cacheManager.getCache("exchangeRate")).thenReturn(exchangeRateCache);
+        when(cacheManager.getCache(Mockito.any())).thenReturn(exchangeRateCache);
 
         Cache.ValueWrapper cachedValue = mock(Cache.ValueWrapper.class);
         when(cachedValue.get()).thenReturn(422.228721);
@@ -155,7 +155,7 @@ class CacheService_unitTest {
     @Test
     void whenNoCache_getSingleValue_throwException(){
         // Set up Expectations
-        when(cacheManager.getCache("exchangeRate")).thenReturn(null);
+        when(cacheManager.getCache(Mockito.any())).thenReturn(null);
 
         // Verify the result is as expected
         assertThatThrownBy(() -> cacheService.getSingleValue("EUR_AMD"))
@@ -166,7 +166,7 @@ class CacheService_unitTest {
     @Test
     void whenNoCache_deleteCache_throwException(){
         // Set up Expectations
-        when(cacheManager.getCache("exchangeRate")).thenReturn(null);
+        when(cacheManager.getCache(Mockito.any())).thenReturn(null);
 
         // Verify the result is as expected
         assertThatThrownBy(() -> cacheService.deleteAllCacheEntries())
@@ -177,7 +177,7 @@ class CacheService_unitTest {
     @Test
     void whenCacheEmpty_getStatistics_returnEmpty(){
         // Set up Expectations
-        when(cacheManager.getCache("exchangeRate")).thenReturn(caffeineCache);
+        when(cacheManager.getCache(Mockito.any())).thenReturn(caffeineCache);
 
         com.github.benmanes.caffeine.cache.Cache nativeCache = mock(com.github.benmanes.caffeine.cache.Cache.class);
         com.github.benmanes.caffeine.cache.stats.CacheStats cacheStats = mock(com.github.benmanes.caffeine.cache.stats.CacheStats.class);
@@ -200,7 +200,7 @@ class CacheService_unitTest {
     @Test
     void whenCacheFull_getStatistics_returnCorrect(){
         // Set up Expectations
-        when(cacheManager.getCache("exchangeRate")).thenReturn(caffeineCache);
+        when(cacheManager.getCache(Mockito.any())).thenReturn(caffeineCache);
 
         com.github.benmanes.caffeine.cache.Cache nativeCache = mock(com.github.benmanes.caffeine.cache.Cache.class);
         com.github.benmanes.caffeine.cache.stats.CacheStats cacheStats = mock(com.github.benmanes.caffeine.cache.stats.CacheStats.class);
@@ -222,7 +222,7 @@ class CacheService_unitTest {
     @Test
     void whenNoCache_getStatistics_throwException(){
         // Set up Expectations
-        when(cacheManager.getCache("exchangeRate")).thenReturn(null);
+        when(cacheManager.getCache(Mockito.any())).thenReturn(null);
 
         // Verify the result is as expected
         assertThatThrownBy(() -> cacheService.getAllStatistics())

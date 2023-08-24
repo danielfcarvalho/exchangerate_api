@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-@Tag(name = "4. Currency Controller", description = "Endpoint to retrieve supported currencies, based on the supported currencies of the External API")
+@Tag(name = "3. Currency Controller", description = "Endpoint to retrieve supported currencies, based on the supported currencies of the External API")
 @RestController
 @RequestMapping("/api/v1/currency")
 public class CurrencyController {

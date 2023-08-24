@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -27,11 +28,13 @@ class ConversionController_IT {
     @Autowired
     CacheManager cacheManager;
 
+    @Value("${cache.name}")
+    private String CACHE_NAME;
     private Cache exchangeRateCache;
 
     @BeforeEach
     void setUp(){
-        this.exchangeRateCache = cacheManager.getCache("exchangeRate");
+        this.exchangeRateCache = cacheManager.getCache(CACHE_NAME);
     }
 
     @AfterEach
@@ -43,8 +46,9 @@ class ConversionController_IT {
     @Test
     void whenGettingConversionForVarious_withValidInput_NotInCache_thenContactExternalAPI() {
         RestAssured.given().contentType("application/json")
+                .queryParams("from", "EUR", "to", "USD,GBP", "amount", "50.0")
                 .when()
-                .get(BASE_URL + randomServerPort + "/api/v1/convert/EUR/various?to=USD,GBP&amount=50.0")
+                .get(BASE_URL + randomServerPort + "/api/v1/convert")
                 .then()
                 .statusCode(200)
                 .assertThat()
@@ -61,8 +65,9 @@ class ConversionController_IT {
         this.exchangeRateCache.put("EUR_USD", 100.88186);
 
         RestAssured.given().contentType("application/json")
+                .queryParams("from", "EUR", "to", "USD,GBP", "amount", "50.0")
                 .when()
-                .get(BASE_URL + randomServerPort + "/api/v1/convert/EUR/various?to=USD,GBP&amount=50.0")
+                .get(BASE_URL + randomServerPort + "/api/v1/convert")
                 .then()
                 .statusCode(200)
                 .assertThat()
@@ -74,8 +79,9 @@ class ConversionController_IT {
     @Test
     void whenGettingConversionForVarious_withInvalidFromInput_thenThrowException() {
         RestAssured.given().contentType("application/json")
+                .queryParams("from", "ZZZ", "to", "USD,GBP", "amount", "50.0")
                 .when()
-                .get(BASE_URL + randomServerPort + "/api/v1/convert/ZZZ/various?to=USD,GBP&amount=50.0")
+                .get(BASE_URL + randomServerPort + "/api/v1/convert")
                 .then()
                 .statusCode(400)
                 .body("message", equalTo("Invalid currency code ZZZ provided!"));
@@ -84,8 +90,9 @@ class ConversionController_IT {
     @Test
     void whenGettingConversionForVarious_withInvalidToInput_thenThrowException() {
         RestAssured.given().contentType("application/json")
+                .queryParams("from", "EUR", "to", "USD,ZZZ", "amount", "50.0")
                 .when()
-                .get(BASE_URL + randomServerPort + "/api/v1/convert/EUR/various?to=USD,ZZZ&amount=50.0")
+                .get(BASE_URL + randomServerPort + "/api/v1/convert")
                 .then()
                 .statusCode(400)
                 .body("message", equalTo("Invalid currency code ZZZ provided!"));
@@ -94,8 +101,9 @@ class ConversionController_IT {
     @Test
     void whenGettingConversionForVarious_withInvalidAmountInput_thenThrowException() {
         RestAssured.given().contentType("application/json")
+                .queryParams("from", "ZZZ", "to", "USD,GBP", "amount", "-50.0")
                 .when()
-                .get(BASE_URL + randomServerPort + "/api/v1/convert/EUR/various?to=USD,GBP&amount=-50.0")
+                .get(BASE_URL + randomServerPort + "/api/v1/convert")
                 .then()
                 .statusCode(400);
     }
@@ -103,8 +111,9 @@ class ConversionController_IT {
     @Test
     void whenGettingConversionForSpecificCurrency_withValidInput_NotInCache_thenContactExternalAPI() {
         RestAssured.given().contentType("application/json")
+                .queryParams("from", "EUR", "to", "USD", "amount", "50.0")
                 .when()
-                .get(BASE_URL + randomServerPort + "/api/v1/convert/EUR?to=USD&amount=60.0")
+                .get(BASE_URL + randomServerPort + "/api/v1/convert")
                 .then()
                 .statusCode(200)
                 .assertThat()
@@ -119,8 +128,9 @@ class ConversionController_IT {
         this.exchangeRateCache.put("EUR_USD", 100.88186);
 
         RestAssured.given().contentType("application/json")
+                .queryParams("from", "EUR", "to", "USD", "amount", "50.0")
                 .when()
-                .get(BASE_URL + randomServerPort + "/api/v1/convert/EUR?to=USD&amount=50.0")
+                .get(BASE_URL + randomServerPort + "/api/v1/convert")
                 .then()
                 .statusCode(200)
                 .assertThat()
@@ -132,8 +142,9 @@ class ConversionController_IT {
     @Test
     void whenGettingConversionForSpecificCurrency_withInvalidFromInput_thenThrowException() {
         RestAssured.given().contentType("application/json")
+                .queryParams("from", "ZZZ", "to", "USD", "amount", "50.0")
                 .when()
-                .get(BASE_URL + randomServerPort + "/api/v1/convert/ZZZ?to=USD")
+                .get(BASE_URL + randomServerPort + "/api/v1/convert")
                 .then()
                 .statusCode(400);
     }
@@ -141,8 +152,9 @@ class ConversionController_IT {
     @Test
     void whenGettingConversionForSpecificCurrency_withInvalidToInput_thenThrowException() {
         RestAssured.given().contentType("application/json")
+                .queryParams("from", "EUR", "to", "ZZZ", "amount", "50.0")
                 .when()
-                .get(BASE_URL + randomServerPort + "/api/v1/convert/EUR?to=ZZZ")
+                .get(BASE_URL + randomServerPort + "/api/v1/convert")
                 .then()
                 .statusCode(400);
     }
@@ -150,8 +162,9 @@ class ConversionController_IT {
     @Test
     void whenGettingConversionForSpecificCurrency_withInvalidAmountInput_thenThrowException() {
         RestAssured.given().contentType("application/json")
+                .queryParams("from", "EUR", "to", "USD", "amount", "-50.0")
                 .when()
-                .get(BASE_URL + randomServerPort + "/api/v1/convert/EUR?to=USD&amount=-50.0")
+                .get(BASE_URL + randomServerPort + "/api/v1/convert")
                 .then()
                 .statusCode(400);
     }

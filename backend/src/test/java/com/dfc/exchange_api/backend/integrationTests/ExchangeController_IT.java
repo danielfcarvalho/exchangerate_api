@@ -5,6 +5,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -22,6 +23,8 @@ class ExchangeController_IT {
     @Autowired
     CacheManager cacheManager;
 
+    @Value("${cache.name}")
+    private String CACHE_NAME;
     private Cache exchangeRateCache;
 
     @LocalServerPort
@@ -29,7 +32,7 @@ class ExchangeController_IT {
 
     @BeforeEach
     void setUp(){
-        this.exchangeRateCache = cacheManager.getCache("exchangeRate");
+        this.exchangeRateCache = cacheManager.getCache(CACHE_NAME);
     }
 
     @AfterEach
@@ -41,8 +44,9 @@ class ExchangeController_IT {
     @Test
     void whenGettingExchangeRateForAll_withValidInput_NotInCache_thenContactExternalAPI() {
         RestAssured.given().contentType("application/json")
+                .queryParams("from", "EUR")
                 .when()
-                .get(BASE_URL + randomServerPort + "/api/v1/exchange/EUR/all")
+                .get(BASE_URL + randomServerPort + "/api/v1/exchange")
                 .then()
                 .statusCode(200)
                 .assertThat()
@@ -58,8 +62,9 @@ class ExchangeController_IT {
         this.exchangeRateCache.put("EUR_USD", 101010.2);
 
         RestAssured.given().contentType("application/json")
+                .queryParams("from", "EUR")
                 .when()
-                .get(BASE_URL + randomServerPort + "/api/v1/exchange/EUR/all")
+                .get(BASE_URL + randomServerPort + "/api/v1/exchange")
                 .then()
                 .statusCode(200)
                 .assertThat()
@@ -71,8 +76,9 @@ class ExchangeController_IT {
     @Test
     void whenGettingExchangeRateForAll_withInvalidInput_thenThrowException() {
         RestAssured.given().contentType("application/json")
+                .queryParams("from", "ZZZ")
                 .when()
-                .get(BASE_URL + randomServerPort + "/api/v1/exchange/ZZZ/all")
+                .get(BASE_URL + randomServerPort + "/api/v1/exchange")
                 .then()
                 .statusCode(400);
     }
@@ -80,8 +86,9 @@ class ExchangeController_IT {
     @Test
     void whenGettingExchangeRateForSpecificCurrency_withValidInput_NotInCache_thenContactExternalAPI() {
         RestAssured.given().contentType("application/json")
+                .queryParams("from", "EUR", "to", "USD")
                 .when()
-                .get(BASE_URL + randomServerPort + "/api/v1/exchange/EUR?to=USD")
+                .get(BASE_URL + randomServerPort + "/api/v1/exchange")
                 .then()
                 .statusCode(200)
                 .assertThat()
@@ -93,24 +100,27 @@ class ExchangeController_IT {
 
     @Test
     void whenGettingExchangeRateForSpecificCurrency_withValidInput_InCache_thenSearchInCache() {
-        this.exchangeRateCache.put("EUR_USD", 101010.2);
+        this.exchangeRateCache.clear();
+        this.exchangeRateCache.put("EUR_USD", 1.086982);
 
         RestAssured.given().contentType("application/json")
+                .queryParams("from", "EUR", "to", "USD")
                 .when()
-                .get(BASE_URL + randomServerPort + "/api/v1/exchange/EUR?to=USD")
+                .get(BASE_URL + randomServerPort + "/api/v1/exchange")
                 .then()
                 .statusCode(200)
                 .assertThat()
                 .body("$", hasKey("USD")).and()
-                .body("USD", equalTo(101010.2f));
+                .body("USD", equalTo(1.086982f));
     }
 
 
     @Test
     void whenGettingExchangeRateForSpecificCurrency_withInvalidFromInput_thenThrowException() {
         RestAssured.given().contentType("application/json")
+                .queryParams("from", "ZZZ", "to", "USD")
                 .when()
-                .get(BASE_URL + randomServerPort + "/api/v1/exchange/ZZZ?to=USD")
+                .get(BASE_URL + randomServerPort + "/api/v1/exchange")
                 .then()
                 .statusCode(400);
     }
@@ -118,8 +128,9 @@ class ExchangeController_IT {
     @Test
     void whenGettingExchangeRateForSpecificCurrency_withInvalidToInput_thenThrowException() {
         RestAssured.given().contentType("application/json")
+                .queryParams("from", "EUR", "to", "ZZZ")
                 .when()
-                .get(BASE_URL + randomServerPort + "/api/v1/exchange/EUR?to=ZZZ")
+                .get(BASE_URL + randomServerPort + "/api/v1/exchange")
                 .then()
                 .statusCode(400);
     }

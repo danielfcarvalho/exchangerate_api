@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
-@Tag(name = "3. Cache Controller", description = "Endpoints to manage and monitor the cache")
+@Tag(name = "4. Cache Controller", description = "Endpoints to manage and monitor the cache")
 @RestController
 @RequestMapping("/api/v1/cache")
 public class CacheController {
