@@ -110,7 +110,7 @@ public class ExchangeService {
         // Fetching from external API
         exchangeRates.putAll(this.getExchangeRatesFromExternalAPI(fromCode, symbols));
 
-        LOGGER.info("Finalizing processing the call to /exchange/{from}/all endpoint with parameters: fromCode - {}", fromCode);
+        LOGGER.info("Finalizing processing the call to /exchange/{from}/all endpoint with parameters: fromCode - {}", fromCode.replaceAll(INPUT_REGEX, "_"));
         return exchangeRates;
     }
 

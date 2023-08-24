@@ -98,7 +98,7 @@ public class ConversionService {
         fetchedExchangeRates.entrySet().forEach(entry -> entry.setValue(entry.getValue() * amount));
         conversionValue.putAll(fetchedExchangeRates);
 
-        LOGGER.info("Finalizing processing the call to /exchange/{currency}/all endpoint with parameters: fromCode - {}", fromCode);
+        LOGGER.info("Finalizing processing the call to /exchange/{currency}/all endpoint with parameters: fromCode - {}", fromCode.replaceAll("[\n\r]", "_"));
         return conversionValue;
     }
 
