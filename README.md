@@ -20,7 +20,7 @@ The API developed on this project supports the following main operations:
 - C: Get value conversion from Currency A to Currency B
 - D: Get value conversion from Currency A to a list of supplied currencies
 
-The projecte was implemented using a layered architecture, with Controllers handling the HTTP requests, Services that contain the business logic and processes of the application, and Repositories and Models managing the data storage, retrieval and manipulation.
+The project was implemented using a layered architecture, with Controllers handling the HTTP requests, Services that contain the business logic and processes of the application, and Repositories and Models managing the data storage, retrieval and manipulation.
 
 In order to comply with the implementation of these operations, as well as with the requirement for minimizing calls to the external API, the following implementation decisions were made:
 
