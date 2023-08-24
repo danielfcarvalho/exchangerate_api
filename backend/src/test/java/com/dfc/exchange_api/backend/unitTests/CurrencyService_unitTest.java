@@ -1,12 +1,11 @@
 package com.dfc.exchange_api.backend.unitTests;
 
-import com.dfc.exchange_api.backend.exceptions.ExternalApiConnectionError;
 import com.dfc.exchange_api.backend.models.Currency;
+import com.dfc.exchange_api.backend.models.CurrencyDTO;
+import com.dfc.exchange_api.backend.models.FetchedSymbolsDTO;
 import com.dfc.exchange_api.backend.repositories.CurrencyRepository;
 import com.dfc.exchange_api.backend.services.CurrencyService;
 import com.dfc.exchange_api.backend.services.ExternalApiService;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,31 +58,15 @@ class CurrencyService_unitTest {
     @Test
     void testFetchSupportedCurrencies_repositoryEmpty() {
         // Setting up Expectations
-        String mockResponse = "{\n" +
-                "    \"motd\": {\n" +
-                "        \"msg\": \"If you or your company use this project or like what we doing, please consider backing us so we can continue maintaining and evolving this project.\",\n" +
-                "        \"url\": \"https://exchangerate.host/#/donate\"\n" +
-                "    },\n" +
-                "    \"success\": true,\n" +
-                "    \"symbols\": {\n" +
-                "        \"AED\": {\n" +
-                "            \"description\": \"United Arab Emirates Dirham\",\n" +
-                "            \"code\": \"AED\"\n" +
-                "        },\n" +
-                "        \"AFN\": {\n" +
-                "            \"description\": \"Afghan Afghani\",\n" +
-                "            \"code\": \"AFN\"\n" +
-                "        },\n" +
-                "        \"ALL\": {\n" +
-                "            \"description\": \"Albanian Lek\",\n" +
-                "            \"code\": \"ALL\"\n" +
-                "        }\n" +
-                "    }\n" +
-                "}";
+        TreeMap<String, CurrencyDTO> fetchedCurrencies = new TreeMap<>();
 
-        JsonElement symbols = JsonParser.parseString(mockResponse).getAsJsonObject().get("symbols");
+        fetchedCurrencies.put("AED", new CurrencyDTO("United Arab Emirates Dirham", "AED"));
+        fetchedCurrencies.put("ALL", new CurrencyDTO("Albanian Lek", "ALL"));
 
-        when(externalApiService.getAvailableCurrencies()).thenReturn(symbols);
+        FetchedSymbolsDTO fetchedSymbols = new FetchedSymbolsDTO();
+        fetchedSymbols.setSymbols(fetchedCurrencies);
+
+        when(externalApiService.getAvailableCurrencies()).thenReturn(fetchedSymbols);
         when(currencyRepository.findByCode(anyString())).thenReturn(Optional.empty());
         when(currencyRepository.findAll()).thenReturn(Collections.emptyList());
 
@@ -97,33 +80,18 @@ class CurrencyService_unitTest {
     @Test
     void testFetchSupportedCurrencies_repositoryNotEmpty() {
         // Setting up Expectations
-        String mockResponse = "{\n" +
-                "    \"motd\": {\n" +
-                "        \"msg\": \"If you or your company use this project or like what we doing, please consider backing us so we can continue maintaining and evolving this project.\",\n" +
-                "        \"url\": \"https://exchangerate.host/#/donate\"\n" +
-                "    },\n" +
-                "    \"success\": true,\n" +
-                "    \"symbols\": {\n" +
-                "        \"AED\": {\n" +
-                "            \"description\": \"United Arab Emirates Dirham\",\n" +
-                "            \"code\": \"AED\"\n" +
-                "        },\n" +
-                "        \"AFN\": {\n" +
-                "            \"description\": \"Afghan Afghani\",\n" +
-                "            \"code\": \"AFN\"\n" +
-                "        },\n" +
-                "        \"ALL\": {\n" +
-                "            \"description\": \"Albanian Lek\",\n" +
-                "            \"code\": \"ALL\"\n" +
-                "        }\n" +
-                "    }\n" +
-                "}";
+        TreeMap<String, CurrencyDTO> fetchedCurrencies = new TreeMap<>();
 
-        JsonElement symbols = JsonParser.parseString(mockResponse).getAsJsonObject().get("symbols");
+        fetchedCurrencies.put("AED", new CurrencyDTO("United Arab Emirates Dirham", "AED"));
+        fetchedCurrencies.put("AFN", new CurrencyDTO("Afghan Afghani", "AFN"));
+        fetchedCurrencies.put("ALL", new CurrencyDTO("Albanian Lek", "ALL"));
+
+        FetchedSymbolsDTO fetchedSymbols = new FetchedSymbolsDTO();
+        fetchedSymbols.setSymbols(fetchedCurrencies);
 
         List<Currency> existingCurrencies = List.of(dirham, afghani, lek);
 
-        when(externalApiService.getAvailableCurrencies()).thenReturn(symbols);
+        when(externalApiService.getAvailableCurrencies()).thenReturn(fetchedSymbols);
         when(currencyRepository.findByCode("AED")).thenReturn(Optional.of(dirham));
         when(currencyRepository.findByCode("AFN")).thenReturn(Optional.of(afghani));
         when(currencyRepository.findByCode("ALL")).thenReturn(Optional.of(lek));
@@ -139,33 +107,18 @@ class CurrencyService_unitTest {
     @Test
     void testFetchSupportedCurrencies_repositoryNotEmpty_hasToDeleteOutdatedCurrencies() {
         // Setting up Expectations
-        String mockResponse = "{\n" +
-                "    \"motd\": {\n" +
-                "        \"msg\": \"If you or your company use this project or like what we doing, please consider backing us so we can continue maintaining and evolving this project.\",\n" +
-                "        \"url\": \"https://exchangerate.host/#/donate\"\n" +
-                "    },\n" +
-                "    \"success\": true,\n" +
-                "    \"symbols\": {\n" +
-                "        \"AED\": {\n" +
-                "            \"description\": \"United Arab Emirates Dirham\",\n" +
-                "            \"code\": \"AED\"\n" +
-                "        },\n" +
-                "        \"AFN\": {\n" +
-                "            \"description\": \"Afghan Afghani\",\n" +
-                "            \"code\": \"AFN\"\n" +
-                "        },\n" +
-                "        \"ALL\": {\n" +
-                "            \"description\": \"Albanian Lek\",\n" +
-                "            \"code\": \"ALL\"\n" +
-                "        }\n" +
-                "    }\n" +
-                "}";
+        TreeMap<String, CurrencyDTO> fetchedCurrencies = new TreeMap<>();
 
-        JsonElement symbols = JsonParser.parseString(mockResponse).getAsJsonObject().get("symbols");
+        fetchedCurrencies.put("AED", new CurrencyDTO("United Arab Emirates Dirham", "AED"));
+        fetchedCurrencies.put("AFN", new CurrencyDTO("Afghan Afghani", "AFN"));
+        fetchedCurrencies.put("ALL", new CurrencyDTO("Albanian Lek", "ALL"));
+
+        FetchedSymbolsDTO fetchedSymbols = new FetchedSymbolsDTO();
+        fetchedSymbols.setSymbols(fetchedCurrencies);
 
         List<Currency> existingCurrencies = List.of(dirham, afghani, euro, lek);
 
-        when(externalApiService.getAvailableCurrencies()).thenReturn(symbols);
+        when(externalApiService.getAvailableCurrencies()).thenReturn(fetchedSymbols);
         when(currencyRepository.findByCode("AED")).thenReturn(Optional.of(dirham));
         when(currencyRepository.findByCode("AFN")).thenReturn(Optional.of(afghani));
         when(currencyRepository.findByCode("ALL")).thenReturn(Optional.of(lek));

@@ -3,12 +3,11 @@ package com.dfc.exchange_api.backend.unitTests;
 import com.dfc.exchange_api.backend.exceptions.ExternalApiConnectionError;
 import com.dfc.exchange_api.backend.exceptions.InvalidCurrencyException;
 import com.dfc.exchange_api.backend.models.Currency;
+import com.dfc.exchange_api.backend.models.ExchangeRateDTO;
 import com.dfc.exchange_api.backend.repositories.CurrencyRepository;
 import com.dfc.exchange_api.backend.services.CurrencyService;
 import com.dfc.exchange_api.backend.services.ExchangeService;
 import com.dfc.exchange_api.backend.services.ExternalApiService;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -72,25 +72,16 @@ class ExchangeService_unitTest {
     void whenGettingExchangeRateForAll_withValidInput_NotInCache_thenContactExternalAPI() {
         // Set up Expectations
         // External API Call
-        String mockResponse = "{\n" +
-                "    \"motd\": {\n" +
-                "        \"msg\": \"If you or your company use this project or like what we doing, please consider backing us so we can continue maintaining and evolving this project.\",\n" +
-                "        \"url\": \"https://exchangerate.host/#/donate\"\n" +
-                "    },\n" +
-                "    \"success\": true,\n" +
-                "    \"historical\": true,\n" +
-                "    \"base\": \"EUR\",\n" +
-                "    \"date\": \"2023-08-17\",\n" +
-                "    \"rates\": {\n" +
-                "        \"AMD\": 422.228721,\n" +
-                "        \"ANG\": 1.965639,\n" +
-                "        \"USD\": 1.088186\n" +
-                "    }\n" +
-                "}";
+        HashMap<String, Double> returnedRates = new HashMap<>();
 
-        JsonElement rates = JsonParser.parseString(mockResponse).getAsJsonObject().get("rates");
+        returnedRates.put("USD", 1.088186);
+        returnedRates.put("AMD", 422.228721);
+        returnedRates.put("ANG", 1.965639);
 
-        when(externalApiService.getLatestExchanges("EUR", Optional.of("EUR,USD,AMD,ANG,"))).thenReturn(rates);
+        ExchangeRateDTO ratesDTO = new ExchangeRateDTO();
+        ratesDTO.setRates(returnedRates);
+
+        when(externalApiService.getLatestExchanges("EUR", Optional.of("EUR,USD,AMD,ANG,"))).thenReturn(ratesDTO);
 
         // Repository calls
         when(currencyRepository.existsByCode("EUR")).thenReturn(true);
@@ -158,25 +149,15 @@ class ExchangeService_unitTest {
     @Test
     void whenGettingExchangeRateForAll_withValidInput_SomeInCache_thenSearchInCache() {
         // Set up Expectations
-        // External API Call
-        String mockResponse = "{\n" +
-                "    \"motd\": {\n" +
-                "        \"msg\": \"If you or your company use this project or like what we doing, please consider backing us so we can continue maintaining and evolving this project.\",\n" +
-                "        \"url\": \"https://exchangerate.host/#/donate\"\n" +
-                "    },\n" +
-                "    \"success\": true,\n" +
-                "    \"historical\": true,\n" +
-                "    \"base\": \"EUR\",\n" +
-                "    \"date\": \"2023-08-17\",\n" +
-                "    \"rates\": {\n" +
-                "        \"AMD\": 422.228721,\n" +
-                "        \"ANG\": 1.965639\n" +
-                "    }\n" +
-                "}";
+        HashMap<String, Double> returnedRates = new HashMap<>();
 
-        JsonElement rates = JsonParser.parseString(mockResponse).getAsJsonObject().get("rates");
+        returnedRates.put("AMD", 422.228721);
+        returnedRates.put("ANG", 1.965639);
 
-        when(externalApiService.getLatestExchanges("EUR", Optional.of("AMD,ANG,"))).thenReturn(rates);
+        ExchangeRateDTO ratesDTO = new ExchangeRateDTO();
+        ratesDTO.setRates(returnedRates);
+
+        when(externalApiService.getLatestExchanges("EUR", Optional.of("AMD,ANG,"))).thenReturn(ratesDTO);
 
         // Repository calls
         when(currencyRepository.existsByCode("EUR")).thenReturn(true);
@@ -262,23 +243,14 @@ class ExchangeService_unitTest {
     @Test
     void whenGettingExchangeRateForSpecificCurrency_withValidInput_NotInCache_thenContactExternalAPI() {
         // Set up Expectations
-        String mockResponse = "{\n" +
-                "    \"motd\": {\n" +
-                "        \"msg\": \"If you or your company use this project or like what we doing, please consider backing us so we can continue maintaining and evolving this project.\",\n" +
-                "        \"url\": \"https://exchangerate.host/#/donate\"\n" +
-                "    },\n" +
-                "    \"success\": true,\n" +
-                "    \"historical\": true,\n" +
-                "    \"base\": \"EUR\",\n" +
-                "    \"date\": \"2023-08-17\",\n" +
-                "    \"rates\": {\n" +
-                "        \"USD\": \"1.088186\"\n" +
-                "    }\n" +
-                "}";
+        HashMap<String, Double> returnedRates = new HashMap<>();
 
-        JsonElement rates = JsonParser.parseString(mockResponse).getAsJsonObject().get("rates");
+        returnedRates.put("USD", 1.088186);
 
-        when(externalApiService.getLatestExchanges("EUR", Optional.of("USD"))).thenReturn(rates);
+        ExchangeRateDTO ratesDTO = new ExchangeRateDTO();
+        ratesDTO.setRates(returnedRates);
+
+        when(externalApiService.getLatestExchanges("EUR", Optional.of("USD"))).thenReturn(ratesDTO);
         when(currencyRepository.existsByCode("EUR")).thenReturn(true);
         when(currencyRepository.existsByCode("USD")).thenReturn(true);
         when(currencyRepository.findByCode("USD")).thenReturn(Optional.of(dollar));

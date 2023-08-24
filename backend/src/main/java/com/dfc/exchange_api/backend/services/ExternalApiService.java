@@ -1,6 +1,8 @@
 package com.dfc.exchange_api.backend.services;
 
 import com.dfc.exchange_api.backend.exceptions.ExternalApiConnectionError;
+import com.dfc.exchange_api.backend.models.ExchangeRateDTO;
+import com.dfc.exchange_api.backend.models.FetchedSymbolsDTO;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import org.slf4j.Logger;
@@ -46,7 +48,7 @@ public class ExternalApiService {
      * @return a JSON Object with the conversion rates
      * @throws ExternalApiConnectionError
      */
-    public JsonElement getLatestExchanges(String base, Optional<String> symbols) throws ExternalApiConnectionError {
+    public ExchangeRateDTO getLatestExchanges(String base, Optional<String> symbols) throws ExternalApiConnectionError {
         // Calling the External API
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL).path("/latest")
                 .queryParam("base", base);
@@ -55,7 +57,7 @@ public class ExternalApiService {
         URI uri = uriBuilder.build().toUri();
 
         // Calling the endpoint and fetching the required JsonElement
-        return this.doHttpGet(uri, "rates");
+        return this.doHttpGet(uri, ExchangeRateDTO.class);
     }
 
     /**
@@ -64,13 +66,13 @@ public class ExternalApiService {
      * @return JsonArray, in which each element holds the description and code for each currency.
      *  @throws ExternalApiConnectionError
      */
-    public JsonElement getAvailableCurrencies() throws ExternalApiConnectionError {
+    public FetchedSymbolsDTO getAvailableCurrencies() throws ExternalApiConnectionError {
         // Calling the External API
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL).path("/symbols");
         URI uri = uriBuilder.build().toUri();
 
         // Calling the endpoint and fetching the required JsonElement
-        return this.doHttpGet(uri, "symbols");
+        return this.doHttpGet(uri, FetchedSymbolsDTO.class);
     }
 
     /**
@@ -84,13 +86,13 @@ public class ExternalApiService {
      * @return the JsonElement that is of interest to the calling method.
      */
     @Retryable(value = { TimeoutException.class }, maxAttempts = 3, backoff = @Backoff(delay = 1000))
-    private JsonElement doHttpGet(URI uri, String memberName) throws ExternalApiConnectionError {
+    private <T> T doHttpGet(URI uri, Class<T> responseType) throws ExternalApiConnectionError {
         try{
             LOGGER.info("Calling the Exchange Rate API on the following path: {}", uri);
-            String response = restTemplate.getForObject(uri, String.class);
+            T response = restTemplate.getForObject(uri, responseType);
             LOGGER.info("Full response as String: {}", response);
 
-            return JsonParser.parseString(response).getAsJsonObject().getAsJsonObject(memberName);
+            return response;
         } catch (HttpServerErrorException ex) {
             // Handle 5xx server errors
             LOGGER.error("External API server error: {}", ex.getMessage());
