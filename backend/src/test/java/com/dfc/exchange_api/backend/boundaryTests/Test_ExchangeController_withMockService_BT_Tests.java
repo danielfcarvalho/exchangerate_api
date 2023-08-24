@@ -53,7 +53,7 @@ class Test_ExchangeController_withMockService_BT_Tests {
         mockMvc.perform(
                         get("/api/v1/exchange")
                                 .param("from", "EUR").contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadGateway());
+                .andExpect(status().isServiceUnavailable());
     }
 
     @Test
@@ -86,7 +86,7 @@ class Test_ExchangeController_withMockService_BT_Tests {
                         get("/api/v1/exchange")
                                 .param("from", "EUR")
                                 .param("to", "USD").contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadGateway());
+                .andExpect(status().isServiceUnavailable());
     }
 
     @Test

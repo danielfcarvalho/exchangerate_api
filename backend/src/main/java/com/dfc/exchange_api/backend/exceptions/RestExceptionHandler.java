@@ -22,8 +22,8 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(ExternalApiConnectionError.class)
-    protected ResponseEntity<Object> handleIncorrectParameter(ExternalApiConnectionError ex){
-        ErrorDetails apiError = new ErrorDetails(HttpStatus.BAD_GATEWAY);
+    protected ResponseEntity<Object> handleExternalAPIError(ExternalApiConnectionError ex){
+        ErrorDetails apiError = new ErrorDetails(HttpStatus.SERVICE_UNAVAILABLE);
         apiError.setMessage(ex.getMessage());
         apiError.setTimestamp(LocalDateTime.now());
         return buildResponseEntity(apiError);
@@ -46,7 +46,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(CacheNotFoundException.class)
-    protected ResponseEntity<Object> handleConstraintViolationException(CacheNotFoundException ex) {
+    protected ResponseEntity<Object> handleCacheError(CacheNotFoundException ex) {
         ErrorDetails apiError = new ErrorDetails(HttpStatus.NOT_FOUND);
         apiError.setMessage(ex.getMessage());
         apiError.setTimestamp(LocalDateTime.now());

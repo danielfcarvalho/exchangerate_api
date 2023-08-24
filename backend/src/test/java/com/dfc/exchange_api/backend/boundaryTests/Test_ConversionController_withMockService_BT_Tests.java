@@ -58,7 +58,7 @@ class Test_ConversionController_withMockService_BT_Tests {
                                 .param("to", "USD,GIP,ANG")
                                 .param("amount", "50.0")
                                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadGateway());
+                .andExpect(status().isServiceUnavailable());
     }
 
     @Test
@@ -123,7 +123,7 @@ class Test_ConversionController_withMockService_BT_Tests {
                                 .param("from", "EUR")
                                 .param("to", "USD")
                                 .param("amount", "50.0").contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadGateway());
+                .andExpect(status().isServiceUnavailable());
     }
 
     @Test
