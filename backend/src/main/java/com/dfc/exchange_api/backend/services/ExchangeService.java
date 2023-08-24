@@ -5,7 +5,6 @@ import com.dfc.exchange_api.backend.exceptions.InvalidCurrencyException;
 import com.dfc.exchange_api.backend.models.Currency;
 import com.dfc.exchange_api.backend.models.ExchangeRateDTO;
 import com.dfc.exchange_api.backend.repositories.CurrencyRepository;
-import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

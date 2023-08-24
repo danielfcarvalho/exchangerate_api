@@ -3,8 +3,6 @@ package com.dfc.exchange_api.backend.services;
 import com.dfc.exchange_api.backend.exceptions.ExternalApiConnectionError;
 import com.dfc.exchange_api.backend.models.ExchangeRateDTO;
 import com.dfc.exchange_api.backend.models.FetchedSymbolsDTO;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,14 +37,12 @@ public class ExternalApiService {
      * This method contacts the /latest endpoint in the Exchange Rate API, which fetches the latest conversion rates from
      * a Currency passed as parameter. It can return either the list of conversion rates to all the supported currencies,
      * or to a subset passed as a request parameter.
-     * In this case, the method will parse the fetched JSON response and return a JsonElement to be used by the other service
-     * methods that depend on this endpoint.
      * In case the External API doesn't reply with an HTTP STATUS OK message, either a customized exception is thrown, or
      * the endpoint is contacted again using @Retryable, in the case of a TIMEOUT.
      * @param base - The currency for which the conversion rates will be fetched.
      * @param symbols - Optional subset of currencies to get the corresponding covnersion rates from.
-     * @return a JSON Object with the conversion rates
-     * @throws ExternalApiConnectionError
+     * @return The DTO entity representing the fetched exchange rates
+     * @throws ExternalApiConnectionError - in case of an error in the connection to the External API
      */
     public ExchangeRateDTO getLatestExchanges(String base, Optional<String> symbols) throws ExternalApiConnectionError {
         // Calling the External API
@@ -63,8 +59,8 @@ public class ExternalApiService {
     /**
      * This method contacts the /symbols endpoint in the external API, retrieving the full list of supported currencies
      * by said API.
-     * @return JsonArray, in which each element holds the description and code for each currency.
-     *  @throws ExternalApiConnectionError
+     * @return The DTO entity representing the fetched currencies
+     * @throws ExternalApiConnectionError - in case of an error in the connection to the External API
      */
     public FetchedSymbolsDTO getAvailableCurrencies() throws ExternalApiConnectionError {
         // Calling the External API
@@ -76,14 +72,14 @@ public class ExternalApiService {
     }
 
     /**
-     * Auxiliary method that will contact the required endpoint using restTemplate, and return the expected JsonElement
-     * to the calling method, after parsing it using Gson's JsonParser.
+     * Auxiliary method that will contact the required endpoint using restTemplate, and return the expected DTO response
+     * to the calling method.
      * In case the External API doesn't reply with an HTTP STATUS OK message, either a customized exception, ExternalApiConnectionError,
      * is thrown, or the endpoint is contacted again using @Retryable, in the case of a TIMEOUT.
      * @param uri - The URI path of the External API endpoint to be called
-     * @param memberName - The name of the member of the JSON Response that the calling method wants to see being returned.
-     *                   It will be fetched using Gson's JSON Parser
-     * @return the JsonElement that is of interest to the calling method.
+     * @param responseType - The class of the expected DTO containing the unpacked response
+     * @return the DTO class containing the response from the server
+     * @throws ExternalApiConnectionError - in case of an error in the connection to the External API
      */
     @Retryable(value = { TimeoutException.class }, maxAttempts = 3, backoff = @Backoff(delay = 1000))
     private <T> T doHttpGet(URI uri, Class<T> responseType) throws ExternalApiConnectionError {

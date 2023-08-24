@@ -5,8 +5,6 @@ import com.dfc.exchange_api.backend.models.Currency;
 import com.dfc.exchange_api.backend.models.CurrencyDTO;
 import com.dfc.exchange_api.backend.models.FetchedSymbolsDTO;
 import com.dfc.exchange_api.backend.repositories.CurrencyRepository;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
