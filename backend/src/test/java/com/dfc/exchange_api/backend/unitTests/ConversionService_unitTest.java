@@ -82,9 +82,9 @@ class ConversionService_unitTest {
         when(exchangeService.getExchangeRatesFromExternalAPI("EUR", "AMD,USD,")).thenReturn(exchangeRatesFromExternalApi);
 
         // Verify the result is as expected
-        Map<String, Double> exchangeRate = conversionService.getConversionForVariousCurrencies("EUR", "AMD,USD", 50.0);
+        Map<String, Double> conversions = conversionService.getConversionFromCurrency("EUR", "AMD,USD", 50.0);
 
-        assertThat(exchangeRate).containsOnlyKeys("AMD", "USD")
+        assertThat(conversions).containsOnlyKeys("AMD", "USD")
                 .containsEntry("USD",54.4093)
                 .containsEntry("AMD",21111.43605);
 
@@ -110,9 +110,9 @@ class ConversionService_unitTest {
         when(exchangeService.getExchangeRateFromCache("EUR", "USD")).thenReturn(1.088186);
 
         // Verify the result is as expected
-        Map<String, Double> exchangeRate = conversionService.getConversionForVariousCurrencies("EUR", "AMD,USD", 50.0);
+        Map<String, Double> conversions = conversionService.getConversionFromCurrency("EUR", "AMD,USD", 50.0);
 
-        assertThat(exchangeRate).containsOnlyKeys("AMD", "USD")
+        assertThat(conversions).containsOnlyKeys("AMD", "USD")
                 .containsEntry("USD",54.4093)
                 .containsEntry("AMD",21111.43605);
 
@@ -143,9 +143,9 @@ class ConversionService_unitTest {
         when(exchangeService.getExchangeRatesFromExternalAPI("EUR", "USD,")).thenReturn(exchangeRatesFromExternalApi);
 
         // Verify the result is as expected
-        Map<String, Double> exchangeRate = conversionService.getConversionForVariousCurrencies("EUR", "AMD,USD", 50.0);
+        Map<String, Double> conversions = conversionService.getConversionFromCurrency("EUR", "AMD,USD", 50.0);
 
-        assertThat(exchangeRate).containsOnlyKeys("AMD", "USD")
+        assertThat(conversions).containsOnlyKeys("AMD", "USD")
                 .containsEntry("USD",54.4093)
                 .containsEntry("AMD",21111.43605);
 
@@ -175,7 +175,7 @@ class ConversionService_unitTest {
         when(exchangeService.getExchangeRatesFromExternalAPI("EUR", "AMD,USD,")).thenThrow(new ExternalApiConnectionError("External API request failed"));
 
         // Verify the result is as expected
-        assertThatThrownBy(() -> conversionService.getConversionForVariousCurrencies("EUR", "AMD,USD", 50.0))
+        assertThatThrownBy(() -> conversionService.getConversionFromCurrency("EUR", "AMD,USD", 50.0))
                 .isInstanceOf(ExternalApiConnectionError.class)
                 .hasMessage("External API request failed");
 
@@ -194,7 +194,7 @@ class ConversionService_unitTest {
         when(currencyRepository.existsByCode("USD")).thenReturn(true);
 
         // Verify the result is as expected
-        assertThatThrownBy(() -> conversionService.getConversionForVariousCurrencies("ZZZ", "AMD,ANG,USD", 50.0))
+        assertThatThrownBy(() -> conversionService.getConversionFromCurrency("ZZZ", "AMD,ANG,USD", 50.0))
                 .isInstanceOf(InvalidCurrencyException.class)
                 .hasMessage("Invalid currency code ZZZ provided!");
 
@@ -209,7 +209,7 @@ class ConversionService_unitTest {
         when(currencyRepository.existsByCode("USD")).thenReturn(true);
 
         // Verify the result is as expected
-        assertThatThrownBy(() -> conversionService.getConversionForVariousCurrencies("AMD", "ZZZ,ANG,USD", 50.0))
+        assertThatThrownBy(() -> conversionService.getConversionFromCurrency("AMD", "ZZZ,ANG,USD", 50.0))
                 .isInstanceOf(InvalidCurrencyException.class)
                 .hasMessage("Invalid currency code ZZZ provided!");
 
@@ -230,16 +230,17 @@ class ConversionService_unitTest {
         // Exchange Service calls
         when(exchangeService.getExchangeRateFromCache("EUR", "USD")).thenReturn(null);
 
-        when(exchangeService.getExchangeRatesFromExternalAPI("EUR", "USD")).thenReturn(exchangeRatesFromExternalApi);
+        when(exchangeService.getExchangeRatesFromExternalAPI("EUR", "USD,")).thenReturn(exchangeRatesFromExternalApi);
 
         // Verify the result is as expected
-        Double conversionValue = conversionService.getConversionForSpecificCurrency("EUR", "USD", 50.0);
+        Map<String, Double> conversions = conversionService.getConversionFromCurrency("EUR", "USD", 50.0);
 
-        assertThat(conversionValue).isEqualTo(54.4093);
+        assertThat(conversions).containsOnlyKeys("USD")
+                .containsEntry("USD",54.4093);
 
         // Method invocation verifications
         verify(exchangeService, times(1)).getExchangeRateFromCache("EUR", "USD");
-        verify(exchangeService, times(1)).getExchangeRatesFromExternalAPI("EUR", "USD");
+        verify(exchangeService, times(1)).getExchangeRatesFromExternalAPI("EUR", "USD,");
     }
 
     @Test
@@ -256,9 +257,10 @@ class ConversionService_unitTest {
         when(exchangeService.getExchangeRateFromCache("EUR", "USD")).thenReturn(1.088186);
 
         // Verify the result is as expected
-        Double conversionValue = conversionService.getConversionForSpecificCurrency("EUR", "USD", 50.0);
+        Map<String, Double> conversions = conversionService.getConversionFromCurrency("EUR", "USD", 50.0);
 
-        assertThat(conversionValue).isEqualTo(54.4093);
+        assertThat(conversions).containsOnlyKeys("USD")
+                .containsEntry("USD",54.4093);
 
         // Method invocation verifications
         verify(exchangeService, times(1)).getExchangeRateFromCache("EUR", "USD");
@@ -276,16 +278,16 @@ class ConversionService_unitTest {
         // Exchange Service calls
         when(exchangeService.getExchangeRateFromCache("EUR", "USD")).thenReturn(null);
 
-        when(exchangeService.getExchangeRatesFromExternalAPI("EUR", "USD")).thenThrow(new ExternalApiConnectionError("External API request failed"));
+        when(exchangeService.getExchangeRatesFromExternalAPI("EUR", "USD,")).thenThrow(new ExternalApiConnectionError("External API request failed"));
 
         // Verify the result is as expected
-        assertThatThrownBy(() -> conversionService.getConversionForSpecificCurrency("EUR", "USD", 50.0))
+        assertThatThrownBy(() -> conversionService.getConversionFromCurrency("EUR", "USD", 50.0))
                 .isInstanceOf(ExternalApiConnectionError.class)
                 .hasMessage("External API request failed");
 
         // Method invocation verifications
         verify(exchangeService, times(1)).getExchangeRateFromCache("EUR", "USD");
-        verify(exchangeService, times(1)).getExchangeRatesFromExternalAPI("EUR", "USD");
+        verify(exchangeService, times(1)).getExchangeRatesFromExternalAPI("EUR", "USD,");
     }
 
     @Test
@@ -295,9 +297,9 @@ class ConversionService_unitTest {
         when(currencyRepository.existsByCode("ZZZ")).thenReturn(false);
 
         // Verify the result is as expected
-        assertThatThrownBy(() -> conversionService.getConversionForSpecificCurrency("ZZZ","EUR", 50.0))
+        assertThatThrownBy(() -> conversionService.getConversionFromCurrency("ZZZ","EUR", 50.0))
                 .isInstanceOf(InvalidCurrencyException.class)
-                .hasMessage("Invalid currency code(s) provided!");
+                .hasMessage("Invalid currency code ZZZ provided!");
     }
 
     @Test
@@ -307,9 +309,9 @@ class ConversionService_unitTest {
         when(currencyRepository.existsByCode("ZZZ")).thenReturn(false);
 
         // Verify the result is as expected
-        assertThatThrownBy(() -> conversionService.getConversionForSpecificCurrency("EUR","ZZZ", 50.0))
+        assertThatThrownBy(() -> conversionService.getConversionFromCurrency("EUR","ZZZ", 50.0))
                 .isInstanceOf(InvalidCurrencyException.class)
-                .hasMessage("Invalid currency code(s) provided!");
+                .hasMessage("Invalid currency code ZZZ provided!");
     }
 
 }

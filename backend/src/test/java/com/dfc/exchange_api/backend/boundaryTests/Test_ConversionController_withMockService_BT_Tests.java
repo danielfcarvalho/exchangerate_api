@@ -35,10 +35,11 @@ class Test_ConversionController_withMockService_BT_Tests {
         returnedExchanges.put("GIP", 42.759);
         returnedExchanges.put("ANG", 98.0237);
 
-        when(conversionService.getConversionForVariousCurrencies("EUR", "USD,GIP,ANG", 50.0)).thenReturn(returnedExchanges);
+        when(conversionService.getConversionFromCurrency("EUR", "USD,GIP,ANG", 50.0)).thenReturn(returnedExchanges);
 
         mockMvc.perform(
-                        get("/api/v1/convert/EUR/various")
+                        get("/api/v1/convert")
+                                .param("from", "EUR")
                                 .param("to", "USD,GIP,ANG")
                                 .param("amount", "50.0").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -49,10 +50,11 @@ class Test_ConversionController_withMockService_BT_Tests {
 
     @Test
     void whenGettingConversionForMany_withValidInput_externalAPIFailure_thenThrowException() throws Exception {
-        when(conversionService.getConversionForVariousCurrencies("EUR", "USD,GIP,ANG", 50.0)).thenThrow(ExternalApiConnectionError.class);
+        when(conversionService.getConversionFromCurrency("EUR", "USD,GIP,ANG", 50.0)).thenThrow(ExternalApiConnectionError.class);
 
         mockMvc.perform(
-                        get("/api/v1/convert/EUR/various")
+                        get("/api/v1/convert")
+                                .param("from", "EUR")
                                 .param("to", "USD,GIP,ANG")
                                 .param("amount", "50.0")
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -61,10 +63,11 @@ class Test_ConversionController_withMockService_BT_Tests {
 
     @Test
     void whenGettingConversionForMany_withInvalidFromInput_thenThrowException() throws Exception {
-        when(conversionService.getConversionForVariousCurrencies("ZZZ", "USD,GIP,ANG", 50.0)).thenThrow(InvalidCurrencyException.class);
+        when(conversionService.getConversionFromCurrency("ZZZ", "USD,GIP,ANG", 50.0)).thenThrow(InvalidCurrencyException.class);
 
         mockMvc.perform(
-                        get("/api/v1/convert/ZZZ/various")
+                        get("/api/v1/convert")
+                                .param("from", "ZZZ")
                                 .param("to", "USD,GIP,ANG")
                                 .param("amount", "50.0")
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -73,10 +76,11 @@ class Test_ConversionController_withMockService_BT_Tests {
 
     @Test
     void whenGettingConversionForMany_withInvalidToInput_thenThrowException() throws Exception {
-        when(conversionService.getConversionForVariousCurrencies("USD", "ZZZ,GIP,ANG", 50.0)).thenThrow(InvalidCurrencyException.class);
+        when(conversionService.getConversionFromCurrency("USD", "ZZZ,GIP,ANG", 50.0)).thenThrow(InvalidCurrencyException.class);
 
         mockMvc.perform(
-                        get("/api/v1/convert/USD/various")
+                        get("/api/v1/convert")
+                                .param("from", "USD")
                                 .param("to", "ZZZ,GIP,ANG")
                                 .param("amount", "50.0")
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -86,7 +90,8 @@ class Test_ConversionController_withMockService_BT_Tests {
     @Test
     void whenGettingConversionForMany_withInvalidAmountInput_thenThrowException() throws Exception {
         mockMvc.perform(
-                        get("/api/v1/convert/EUR/various")
+                        get("/api/v1/convert")
+                                .param("from", "EUR")
                                 .param("to", "USD,GIP,ANG")
                                 .param("amount", "-50.0")
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -95,10 +100,14 @@ class Test_ConversionController_withMockService_BT_Tests {
 
     @Test
     void whenGettingConversionForSpecificCurrency_withValidInput_thenReturnOK() throws Exception {
-        when(conversionService.getConversionForSpecificCurrency("EUR", "USD", 50.0)).thenReturn(54.4212);
+        Map<String, Double> returnedConversions = new HashMap<>();
+        returnedConversions.put("USD", 54.4212);
+
+        when(conversionService.getConversionFromCurrency("EUR", "USD", 50.0)).thenReturn(returnedConversions);
 
         mockMvc.perform(
-                        get("/api/v1/convert/EUR")
+                        get("/api/v1/convert")
+                                .param("from", "EUR")
                                 .param("to", "USD")
                                 .param("amount", "50.0").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -107,10 +116,11 @@ class Test_ConversionController_withMockService_BT_Tests {
 
     @Test
     void whenGettingConversionForSpecificCurrency_withValidInput_externalAPIFailure_thenThrowException() throws Exception {
-        when(conversionService.getConversionForSpecificCurrency("EUR", "USD", 50.0)).thenThrow(ExternalApiConnectionError.class);
+        when(conversionService.getConversionFromCurrency("EUR", "USD", 50.0)).thenThrow(ExternalApiConnectionError.class);
 
         mockMvc.perform(
-                        get("/api/v1/convert/EUR")
+                        get("/api/v1/convert")
+                                .param("from", "EUR")
                                 .param("to", "USD")
                                 .param("amount", "50.0").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadGateway());
@@ -118,10 +128,11 @@ class Test_ConversionController_withMockService_BT_Tests {
 
     @Test
     void whenGettingConversionForSpecificCurrency_withInvalidFromInput_thenThrowException() throws Exception {
-        when(conversionService.getConversionForSpecificCurrency("ZZZ", "USD", 50.0)).thenThrow(InvalidCurrencyException.class);
+        when(conversionService.getConversionFromCurrency("ZZZ", "USD", 50.0)).thenThrow(InvalidCurrencyException.class);
 
         mockMvc.perform(
-                        get("/api/v1/convert/ZZZ")
+                        get("/api/v1/convert")
+                                .param("from", "ZZZ")
                                 .param("to", "USD")
                                 .param("amount", "50.0").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
@@ -129,10 +140,11 @@ class Test_ConversionController_withMockService_BT_Tests {
 
     @Test
     void whenGettingConversionForSpecificCurrency_withInvalidToInput_thenThrowException() throws Exception {
-        when(conversionService.getConversionForSpecificCurrency("USD", "ZZZ", 50.0)).thenThrow(InvalidCurrencyException.class);
+        when(conversionService.getConversionFromCurrency("USD", "ZZZ", 50.0)).thenThrow(InvalidCurrencyException.class);
 
         mockMvc.perform(
-                        get("/api/v1/convert/USD")
+                        get("/api/v1/convert")
+                                .param("from", "USD")
                                 .param("to", "ZZZ")
                                 .param("amount", "50.0").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
@@ -141,7 +153,8 @@ class Test_ConversionController_withMockService_BT_Tests {
     @Test
     void whenGettingConversionForSpecificCurrency_withInvalidAmountInput_thenThrowException() throws Exception {
         mockMvc.perform(
-                        get("/api/v1/convert/EUR")
+                        get("/api/v1/convert")
+                                .param("from", "EUR")
                                 .param("to", "USD")
                                 .param("amount", String.valueOf(-50.0))
                                 .contentType(MediaType.APPLICATION_JSON))

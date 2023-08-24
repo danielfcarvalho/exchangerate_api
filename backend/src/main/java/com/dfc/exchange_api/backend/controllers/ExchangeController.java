@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -51,7 +50,7 @@ public class ExchangeController {
     @GetMapping
     public Map<String, Double> getExchangeRateFromCurrency(
             @Parameter(description = "The code of currency A", required = true) @RequestParam(name = "from") String from,
-            @Parameter(description = "The code of currency B", required = false) @RequestParam(name = "to", required = false) String to)
+            @Parameter(description = "The code of currency B") @RequestParam(name = "to", required = false) String to)
             throws InvalidCurrencyException, ExternalApiConnectionError {
         LOGGER.info("Received a request on the GET /exchange endpoint");
 
@@ -59,12 +58,12 @@ public class ExchangeController {
             // Exchange Rate for a Specific Currency
             LOGGER.info("Request for a specific exchange rate");
 
-            return Map.of(to, exchangeService.getExchangeRateForSpecificCurrency(from, to));
+            return Map.of(to, exchangeService.getExchangeRateForSpecificCurrency(from.toUpperCase(), to.toUpperCase()));
         }else{
             // Exchange Rate for all Currencies
             LOGGER.info("Request for all exchange rates");
 
-            return exchangeService.getExchangeRateForAll(from);
+            return exchangeService.getExchangeRateForAll(from.toUpperCase());
         }
     }
 }
