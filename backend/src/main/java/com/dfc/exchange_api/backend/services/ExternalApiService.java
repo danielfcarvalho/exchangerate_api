@@ -111,4 +111,8 @@ public class ExternalApiService {
             throw new ExternalApiConnectionError("External API request failed");
         }
     }
+
+    public void setBASE_URL(String BASE_URL) {
+        this.BASE_URL = BASE_URL;
+    }
 }

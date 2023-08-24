@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = CacheController.class)
-class Test_CacheController_withMockService_BT {
+class Test_CacheController_withMockService_BT_Tests {
     @Autowired
     MockMvc mockMvc;
 
