@@ -14,7 +14,7 @@ import static org.hamcrest.Matchers.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestDatabase
-public class CurrencyController_IT {
+class CurrencyController_IT {
     private final static String BASE_URL = "http://localhost:";
 
     @LocalServerPort

@@ -14,12 +14,10 @@ import java.util.stream.Collectors;
 public class ConversionService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConversionService.class);
     private CurrencyRepository currencyRepository;
-    private CurrencyService currencyService;
     private ExchangeService exchangeService;
 
-    public ConversionService(CurrencyRepository currencyRepository, CurrencyService currencyService, ExchangeService exchangeService) {
+    public ConversionService(CurrencyRepository currencyRepository, ExchangeService exchangeService) {
         this.currencyRepository = currencyRepository;
-        this.currencyService = currencyService;
         this.exchangeService = exchangeService;
     }
 

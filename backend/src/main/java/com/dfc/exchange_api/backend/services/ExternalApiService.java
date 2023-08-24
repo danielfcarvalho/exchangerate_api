@@ -5,7 +5,6 @@ import com.dfc.exchange_api.backend.models.ExchangeRateDTO;
 import com.dfc.exchange_api.backend.models.FetchedSymbolsDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.retry.annotation.Backoff;

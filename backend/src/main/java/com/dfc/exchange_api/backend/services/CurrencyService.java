@@ -65,7 +65,7 @@ public class CurrencyService {
                 if (currencyRepository.findByCode(code).isEmpty()) {
                     // If currency is not already in the repository
                     Currency currentCurrency = new Currency(description, code);
-                    LOGGER.info("Fetched currency: {}", currentCurrency.toString());
+                    LOGGER.info("Fetched currency: {}", currentCurrency);
                     supportedCurrencies.add(currentCurrency);
                 }
             }

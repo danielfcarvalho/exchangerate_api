@@ -3,8 +3,6 @@ package com.dfc.exchange_api.backend.models;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.TreeMap;
 
 /**
