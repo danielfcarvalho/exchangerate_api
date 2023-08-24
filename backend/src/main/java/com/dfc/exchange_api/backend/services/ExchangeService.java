@@ -182,7 +182,7 @@ public class ExchangeService {
     }
 
     /**
-     * Auxilliary method that checks if a code passed as a parameter by the user in an API request belongs to a supported
+     * Auxiliary method that checks if a code passed as a parameter by the user in an API request belongs to a supported
      * currency or not.
      * @param code - the code of the Currency to be checked
      * @return a boolean representing whether the code is supported or not by the API

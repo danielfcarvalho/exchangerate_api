@@ -53,7 +53,7 @@ public class ExternalApiService {
         URI uri = uriBuilder.build().toUri();
 
         // Calling the endpoint and fetching the required JsonElement
-        return this.doHttpGet(uri, "rates", false);
+        return this.doHttpGet(uri, "rates");
     }
 
     /**
@@ -68,41 +68,27 @@ public class ExternalApiService {
         URI uri = uriBuilder.build().toUri();
 
         // Calling the endpoint and fetching the required JsonElement
-        return this.doHttpGet(uri, "symbols", false);
+        return this.doHttpGet(uri, "symbols");
     }
 
     /**
-     * Auxilliary method that will contact the required endpoint using restTemplate, and return the expected JsonElement
+     * Auxiliary method that will contact the required endpoint using restTemplate, and return the expected JsonElement
      * to the calling method, after parsing it using Gson's JsonParser.
      * In case the External API doesn't reply with an HTTP STATUS OK message, either a customized exception, ExternalApiConnectionError,
      * is thrown, or the endpoint is contacted again using @Retryable, in the case of a TIMEOUT.
      * @param uri - The URI path of the External API endpoint to be called
      * @param memberName - The name of the member of the JSON Response that the calling method wants to see being returned.
      *                   It will be fetched using Gson's JSON Parser
-     * @param isJsonPrimitive - A boolean that checks whether the Json Element to be returned from the parsing is a JsonPrimitive, or a JsonObject.
-     *                        This is because the use of JsonParser requires the extraction to be made either using a getAsJsonPrimitive() method,
-     *                        or a getAsJsonObject() method, and JsonPrimitive elements cannot be casted to JsonObject.
      * @return the JsonElement that is of interest to the calling method.
      */
     @Retryable(value = { TimeoutException.class }, maxAttempts = 3, backoff = @Backoff(delay = 1000))
-    private JsonElement doHttpGet(URI uri, String memberName, boolean isJsonPrimitive) throws ExternalApiConnectionError {
+    private JsonElement doHttpGet(URI uri, String memberName) throws ExternalApiConnectionError {
         try{
             LOGGER.info("Calling the Exchange Rate API on the following path: {}", uri);
             String response = restTemplate.getForObject(uri, String.class);
             LOGGER.info("Full response as String: {}", response);
 
-            JsonElement obj;
-            if(isJsonPrimitive){
-                // extract as JsonPrimitive
-                obj = JsonParser.parseString(response).getAsJsonObject().getAsJsonPrimitive(memberName);
-            }else{
-                // extract as JsonObject
-                obj = JsonParser.parseString(response).getAsJsonObject().getAsJsonObject(memberName);
-            }
-
-            LOGGER.info("Extracted response as JSON: {}", obj);
-
-            return obj;
+            return JsonParser.parseString(response).getAsJsonObject().getAsJsonObject(memberName);
         } catch (HttpServerErrorException ex) {
             // Handle 5xx server errors
             LOGGER.error("External API server error: {}", ex.getMessage());

@@ -38,7 +38,8 @@ class Test_ExchangeController_withMockService_BT_Tests {
         when(exchangeService.getExchangeRateForAll("EUR")).thenReturn(returnedExchanges);
 
         mockMvc.perform(
-                        get("/api/v1/exchange/EUR/all").contentType(MediaType.APPLICATION_JSON))
+                        get("/api/v1/exchange")
+                                .param("from", "EUR").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.USD", is(1.088424)))
                 .andExpect(jsonPath("$.GIP", is(0.85518)))
@@ -50,7 +51,8 @@ class Test_ExchangeController_withMockService_BT_Tests {
         when(exchangeService.getExchangeRateForAll("EUR")).thenThrow(ExternalApiConnectionError.class);
 
         mockMvc.perform(
-                        get("/api/v1/exchange/EUR/all").contentType(MediaType.APPLICATION_JSON))
+                        get("/api/v1/exchange")
+                                .param("from", "EUR").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadGateway());
     }
 
@@ -59,7 +61,8 @@ class Test_ExchangeController_withMockService_BT_Tests {
         when(exchangeService.getExchangeRateForAll("ZZZ")).thenThrow(InvalidCurrencyException.class);
 
         mockMvc.perform(
-                        get("/api/v1/exchange/ZZZ/all").contentType(MediaType.APPLICATION_JSON))
+                        get("/api/v1/exchange")
+                                .param("from", "ZZZ").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
 
@@ -68,7 +71,8 @@ class Test_ExchangeController_withMockService_BT_Tests {
         when(exchangeService.getExchangeRateForSpecificCurrency("EUR", "USD")).thenReturn(1.088424);
 
         mockMvc.perform(
-                        get("/api/v1/exchange/EUR")
+                        get("/api/v1/exchange")
+                                .param("from", "EUR")
                                 .param("to", "USD").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.USD", is(1.088424)));
@@ -79,7 +83,8 @@ class Test_ExchangeController_withMockService_BT_Tests {
         when(exchangeService.getExchangeRateForSpecificCurrency("EUR", "USD")).thenThrow(ExternalApiConnectionError.class);
 
         mockMvc.perform(
-                        get("/api/v1/exchange/EUR")
+                        get("/api/v1/exchange")
+                                .param("from", "EUR")
                                 .param("to", "USD").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadGateway());
     }
@@ -89,7 +94,8 @@ class Test_ExchangeController_withMockService_BT_Tests {
         when(exchangeService.getExchangeRateForSpecificCurrency("ZZZ", "USD")).thenThrow(InvalidCurrencyException.class);
 
         mockMvc.perform(
-                        get("/api/v1/exchange/ZZZ")
+                        get("/api/v1/exchange")
+                                .param("from", "ZZZ")
                                 .param("to", "USD").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
@@ -99,7 +105,8 @@ class Test_ExchangeController_withMockService_BT_Tests {
         when(exchangeService.getExchangeRateForSpecificCurrency("EUR", "ZZZ")).thenThrow(InvalidCurrencyException.class);
 
         mockMvc.perform(
-                        get("/api/v1/exchange/EUR")
+                        get("/api/v1/exchange")
+                                .param("from", "EUR")
                                 .param("to", "ZZZ").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
