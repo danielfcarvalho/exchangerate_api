@@ -2,9 +2,9 @@ package com.dfc.exchange_api.backend.services;
 
 import com.dfc.exchange_api.backend.exceptions.ExternalApiConnectionError;
 import com.dfc.exchange_api.backend.models.Currency;
+import com.dfc.exchange_api.backend.models.CurrencyDTO;
+import com.dfc.exchange_api.backend.models.FetchedSymbolsDTO;
 import com.dfc.exchange_api.backend.repositories.CurrencyRepository;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -41,10 +41,10 @@ public class CurrencyService {
         LOGGER.info("Fetching list of supported currencies by the external API....");
 
         try {
-            JsonObject currenciesJSON = externalApiService.getAvailableCurrencies().getAsJsonObject();
+            FetchedSymbolsDTO fetchedCurrencies = externalApiService.getAvailableCurrencies();
 
             // Fetching any previously supported currencies that are no longer supported
-            Set<String> currentlySupportedCurrencies = currenciesJSON.keySet();
+            Set<String> currentlySupportedCurrencies = fetchedCurrencies.getSymbols().keySet();
             List<Currency> outdatedCurrencies = currencyRepository.findAll()
                     .stream()
                     .filter(currency -> !currentlySupportedCurrencies.contains(currency.getCode()))
@@ -57,15 +57,15 @@ public class CurrencyService {
             }
 
             // Checking if any of the fetched currencies is new; adding new currencies to the repository
-            for (Map.Entry<String, JsonElement> entry : currenciesJSON.entrySet()) {
-                JsonObject currentObject = entry.getValue().getAsJsonObject(); // {"description": ..., "code": ....}
-                String description = currentObject.getAsJsonPrimitive("description").getAsString();
-                String code = currentObject.getAsJsonPrimitive("code").getAsString();
+            for (Map.Entry<String, CurrencyDTO> entry : fetchedCurrencies.getSymbols().entrySet()) {
+                CurrencyDTO currentFetchedCurrency = entry.getValue();
+                String description = currentFetchedCurrency.getDescription();
+                String code = currentFetchedCurrency.getCode();
 
                 if (currencyRepository.findByCode(code).isEmpty()) {
                     // If currency is not already in the repository
                     Currency currentCurrency = new Currency(description, code);
-                    LOGGER.info("Fetched currency: {}", currentCurrency);
+                    LOGGER.info("Fetched currency: {}", currentCurrency.toString());
                     supportedCurrencies.add(currentCurrency);
                 }
             }
@@ -81,7 +81,7 @@ public class CurrencyService {
     }
 
     /**
-     * Method used to get all of the currencies supported by this API, called by the REST endpoint associated with this
+     * Method used to get all the currencies supported by this API, called by the REST endpoint associated with this
      * call.
      * @return the list of supported currencies
      */

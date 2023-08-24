@@ -3,8 +3,8 @@ package com.dfc.exchange_api.backend.services;
 import com.dfc.exchange_api.backend.exceptions.ExternalApiConnectionError;
 import com.dfc.exchange_api.backend.exceptions.InvalidCurrencyException;
 import com.dfc.exchange_api.backend.models.Currency;
+import com.dfc.exchange_api.backend.models.ExchangeRateDTO;
 import com.dfc.exchange_api.backend.repositories.CurrencyRepository;
-import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -157,14 +157,14 @@ public class ExchangeService {
 
         Map<String, Double> exchangeRates = new HashMap<>();
         Cache exchangeRateCache = cacheManager.getCache(CACHE_NAME);
-        JsonObject rates = apiService.getLatestExchanges(fromCode, Optional.of(symbols)).getAsJsonObject();
+        ExchangeRateDTO fetchedRates = apiService.getLatestExchanges(fromCode, Optional.of(symbols));
 
-        for(String key: rates.keySet()){
+        for(String key: fetchedRates.getRates().keySet()){
             Optional<Currency> exchangedCurrency = currencyRepository.findByCode(key);
 
             if(exchangedCurrency.isPresent()){
                 String exchangedCurrencyCode = exchangedCurrency.get().getCode();
-                Double exchangeValue = rates.get(key).getAsDouble();
+                Double exchangeValue = fetchedRates.getRates().get(key);
 
                 exchangeRates.put(exchangedCurrencyCode, exchangeValue);
 

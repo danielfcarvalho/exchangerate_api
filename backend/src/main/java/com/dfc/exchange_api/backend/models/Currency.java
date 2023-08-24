@@ -19,6 +19,7 @@ import lombok.*;
 public class Currency {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @ToString.Exclude
     private Long id;
 
     private String name;

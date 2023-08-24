@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-@Tag(name = "2. Conversion Controller", description = "Endpoints to convert amounts from a supplied currency")
+@Tag(name = "2. Conversion Controller", description = "Endpoint to convert amounts from a supplied currency")
 @RestController
 @Validated
 @RequestMapping("/api/v1/convert")
