@@ -100,7 +100,7 @@ class ExchangeService_unitTest {
         when(currencyRepository.findAll()).thenReturn(testCurrencies);
 
         // Cache calls
-        when(cacheManager.getCache("exchangeRate")).thenReturn(exchangeRateCache);
+        when(cacheManager.getCache(Mockito.any())).thenReturn(exchangeRateCache);
         when(exchangeRateCache.get("EUR_AMD")).thenReturn(null);
         when(exchangeRateCache.get("EUR_ANG")).thenReturn(null);
         when(exchangeRateCache.get("EUR_USD")).thenReturn(null);
@@ -133,7 +133,7 @@ class ExchangeService_unitTest {
         when(currencyRepository.findAll()).thenReturn(testCurrencies);
 
         // Cache Calls
-        when(cacheManager.getCache("exchangeRate")).thenReturn(exchangeRateCache);
+        when(cacheManager.getCache(Mockito.any())).thenReturn(exchangeRateCache);
         Cache.ValueWrapper cachedValue = mock(Cache.ValueWrapper.class);
         when(cachedValue.get()).thenReturn(422.228721);
 
@@ -185,7 +185,7 @@ class ExchangeService_unitTest {
         when(currencyRepository.findAll()).thenReturn(testCurrencies);
 
         // Cache calls
-        when(cacheManager.getCache("exchangeRate")).thenReturn(exchangeRateCache);
+        when(cacheManager.getCache(Mockito.any())).thenReturn(exchangeRateCache);
         Cache.ValueWrapper cachedValue = mock(Cache.ValueWrapper.class);
         when(cachedValue.get()).thenReturn(422.228721);
 
@@ -228,7 +228,7 @@ class ExchangeService_unitTest {
         when(currencyRepository.findAll()).thenReturn(testCurrencies);
 
         // Cache calls
-        when(cacheManager.getCache("exchangeRate")).thenReturn(exchangeRateCache);
+        when(cacheManager.getCache(Mockito.any())).thenReturn(exchangeRateCache);
         when(exchangeRateCache.get("EUR_AMD")).thenReturn(null);
         when(exchangeRateCache.get("EUR_ANG")).thenReturn(null);
         when(exchangeRateCache.get("EUR_USD")).thenReturn(null);
@@ -284,7 +284,7 @@ class ExchangeService_unitTest {
         when(currencyRepository.findByCode("USD")).thenReturn(Optional.of(dollar));
 
         // Cache calls
-        when(cacheManager.getCache("exchangeRate")).thenReturn(exchangeRateCache);
+        when(cacheManager.getCache(Mockito.any())).thenReturn(exchangeRateCache);
 
         // Verify the result is as expected
         Double exchangeRate = exchangeService.getExchangeRateForSpecificCurrency("EUR", "USD");

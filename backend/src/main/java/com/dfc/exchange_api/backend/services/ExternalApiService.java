@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
@@ -23,9 +24,10 @@ import java.util.concurrent.TimeoutException;
  */
 @Service
 public class ExternalApiService {
+    @Value("${external.api.base.url}")
+    private String BASE_URL = "https://api.exchangerate.host";
     private static final Logger LOGGER = LoggerFactory.getLogger(ExternalApiService.class);
     private final RestTemplate restTemplate;
-    private static final String BASE_URL = "https://api.exchangerate.host";
 
     public ExternalApiService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;

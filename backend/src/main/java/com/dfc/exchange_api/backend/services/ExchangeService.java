@@ -7,6 +7,7 @@ import com.dfc.exchange_api.backend.repositories.CurrencyRepository;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
@@ -18,6 +19,8 @@ import java.util.Optional;
 
 @Service
 public class ExchangeService {
+    @Value("${cache.name}")
+    private String CACHE_NAME;
     private static final Logger LOGGER = LoggerFactory.getLogger(ExchangeService.class);
     private static final String INPUT_REGEX = "[\n\r]";
     private ExternalApiService apiService;
@@ -119,7 +122,7 @@ public class ExchangeService {
      * @return the exchange rate stored in the cache; or null, in case there isn't any value in the cache
      */
     public Double getExchangeRateFromCache(String fromCode, String toCode) {
-        Cache exchangeRateCache = cacheManager.getCache("exchangeRate");
+        Cache exchangeRateCache = cacheManager.getCache(CACHE_NAME);
 
         if(exchangeRateCache != null){
             // Create the cache key
@@ -153,7 +156,7 @@ public class ExchangeService {
         LOGGER.info("Fetching from external API the required exchange rates from {}", fromCode.replaceAll(INPUT_REGEX, "_"));
 
         Map<String, Double> exchangeRates = new HashMap<>();
-        Cache exchangeRateCache = cacheManager.getCache("exchangeRate");
+        Cache exchangeRateCache = cacheManager.getCache(CACHE_NAME);
         JsonObject rates = apiService.getLatestExchanges(fromCode, Optional.of(symbols)).getAsJsonObject();
 
         for(String key: rates.keySet()){

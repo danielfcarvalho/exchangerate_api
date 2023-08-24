@@ -3,6 +3,7 @@ package com.dfc.exchange_api.backend.services;
 import com.dfc.exchange_api.backend.exceptions.CacheNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCache;
@@ -15,9 +16,10 @@ import java.util.Map;
 
 @Service
 public class CacheService {
+    @Value("${cache.name}")
+    private String CACHE_NAME;
     private static final Logger LOGGER = LoggerFactory.getLogger(CacheService.class);
     private static final String INPUT_REGEX = "[\n\r]";
-    private static final String CACHE_NAME = "exchangeRate";
     private CacheManager cacheManager;
 
     public CacheService(CacheManager cacheManager) {

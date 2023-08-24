@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -27,11 +28,13 @@ class ConversionController_IT {
     @Autowired
     CacheManager cacheManager;
 
+    @Value("${cache.name}")
+    private String CACHE_NAME;
     private Cache exchangeRateCache;
 
     @BeforeEach
     void setUp(){
-        this.exchangeRateCache = cacheManager.getCache("exchangeRate");
+        this.exchangeRateCache = cacheManager.getCache(CACHE_NAME);
     }
 
     @AfterEach

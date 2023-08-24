@@ -5,6 +5,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -22,6 +23,8 @@ class ExchangeController_IT {
     @Autowired
     CacheManager cacheManager;
 
+    @Value("${cache.name}")
+    private String CACHE_NAME;
     private Cache exchangeRateCache;
 
     @LocalServerPort
@@ -29,7 +32,7 @@ class ExchangeController_IT {
 
     @BeforeEach
     void setUp(){
-        this.exchangeRateCache = cacheManager.getCache("exchangeRate");
+        this.exchangeRateCache = cacheManager.getCache(CACHE_NAME);
     }
 
     @AfterEach
@@ -97,7 +100,8 @@ class ExchangeController_IT {
 
     @Test
     void whenGettingExchangeRateForSpecificCurrency_withValidInput_InCache_thenSearchInCache() {
-        this.exchangeRateCache.put("EUR_USD", 101010.2);
+        this.exchangeRateCache.clear();
+        this.exchangeRateCache.put("EUR_USD", 1.086982);
 
         RestAssured.given().contentType("application/json")
                 .queryParams("from", "EUR", "to", "USD")
@@ -107,7 +111,7 @@ class ExchangeController_IT {
                 .statusCode(200)
                 .assertThat()
                 .body("$", hasKey("USD")).and()
-                .body("USD", equalTo(101010.2f));
+                .body("USD", equalTo(1.086982f));
     }
 
 
