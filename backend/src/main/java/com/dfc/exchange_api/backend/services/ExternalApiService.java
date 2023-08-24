@@ -6,13 +6,15 @@ import com.dfc.exchange_api.backend.models.FetchedSymbolsDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
@@ -24,13 +26,16 @@ import java.util.concurrent.TimeoutException;
  */
 @Service
 public class ExternalApiService {
-    @Value("${external.api.base.url}")
     private String BASE_URL = "https://api.exchangerate.host";
     private static final Logger LOGGER = LoggerFactory.getLogger(ExternalApiService.class);
-    private final RestTemplate restTemplate;
+    private final WebClient webClient;
 
-    public ExternalApiService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public ExternalApiService() {
+        this.webClient = WebClient.builder()
+                .baseUrl(BASE_URL)
+                .defaultCookie("cookieKey", "cookieValue")
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
     }
 
     /**
@@ -52,7 +57,7 @@ public class ExternalApiService {
         symbols.ifPresent(s -> uriBuilder.queryParam("symbols", s));
         URI uri = uriBuilder.build().toUri();
 
-        // Calling the endpoint and fetching the required JsonElement
+        // Calling the endpoint and fetching the required response
         return this.doHttpGet(uri, ExchangeRateDTO.class);
     }
 
@@ -67,7 +72,7 @@ public class ExternalApiService {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL).path("/symbols");
         URI uri = uriBuilder.build().toUri();
 
-        // Calling the endpoint and fetching the required JsonElement
+        // Calling the endpoint and fetching the required response
         return this.doHttpGet(uri, FetchedSymbolsDTO.class);
     }
 
@@ -85,7 +90,11 @@ public class ExternalApiService {
     private <T> T doHttpGet(URI uri, Class<T> responseType) throws ExternalApiConnectionError {
         try{
             LOGGER.info("Calling the Exchange Rate API on the following path: {}", uri);
-            T response = restTemplate.getForObject(uri, responseType);
+            T response = webClient.get()
+                            .uri(uri)
+                                    .retrieve()
+                                            .bodyToMono(responseType)
+                                                    .block();
             LOGGER.info("Full response as String: {}", response);
 
             return response;

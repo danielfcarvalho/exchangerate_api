@@ -46,7 +46,7 @@ public class ExchangeController {
                     content = @Content),
             @ApiResponse(responseCode = "402", description = "Error connecting to external API",
                     content = @Content),})
-    @Operation(summary = "Get the exchange rates from currency A to either a currency B, if \"to\" is present, or all supported currencies, if \"to\" is absent")
+    @Operation(summary = "Get the exchange rates from currency A to either a currency B (if \"to\" is present) or all supported currencies (if \"to\" is absent)")
     @GetMapping
     public Map<String, Double> getExchangeRateFromCurrency(
             @Parameter(description = "The code of currency A", required = true) @RequestParam(name = "from") String from,
