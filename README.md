@@ -31,7 +31,7 @@ In order to comply with the implementation of these operations, as well as with 
     - A cache was implemented using Spring Boot's cache abstraction, and Caffeine as the implementation. In this cache, the exchange rates of the External API are stored with a TTL of 1 minute. Each individual exchange rate from currency A to a currency B is stored has an individual entry in this cache. Thus, when any operations are made, the exchange rates are first retrieved from the cache, with the External API being contacted only when the rate is not stored.
 - Custom exception handling was implemented for potential exceptions generated during the supported operations, such as errors contacting the external API, errors handling the cache, invalid parameters sent by users, among others. These were handled with a custom Exception Handler.
 - Operations A and B were implemented in the same endpoint of the ExchangeController, while operations C and D were implemented on the same endpoint of the ConversionController.
-- Besides these 2, a CurrencyController was implemented, with an endpoint to retrieve the currencis currently supported by the application; a CacheController was also implemented, with endpoints used mostly during the development for debugging purposes.
+- Besides these 2, a CurrencyController was implemented, with an endpoint to retrieve the currencies currently supported by the application; a CacheController was also implemented, with endpoints used mostly during the development for debugging purposes.
 
 ## Development and Quality Assurance Practices
 
